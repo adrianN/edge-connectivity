@@ -1,14 +1,5 @@
 import networkx as nx
 
-def toStr(G):
-	attr = nx.get_edge_attributes(G,'type')
-	l = []
-	for (u,v) in G.edges_iter():
-		l.append(str(u)+'-'+str(v)+' '+str(attr[(u,v)]))
-	return '\n'.join(l)
-
-nx.Graph.__str__ = toStr
-
 def dfs(G,source=None):
 	"""Produce edges in a depth-first-search starting at source."""
 	# Very slight modification of the DFS procedure from networkx
@@ -38,7 +29,8 @@ def dfs(G,source=None):
 				stack.pop()
 
 def direct_and_tag(G, source = None):
-	""" Makes tree edges go up, back edges go down. Computes dfi, parent for nodes and type for edges"""
+	""" Makes tree edges go up, back edges go down. Computes dfi, 
+		parent for nodes and type (back, tree) for edges"""
 	G2 = nx.DiGraph()
 	G2.add_nodes_from(G.nodes_iter())
 	positions = []
@@ -64,6 +56,12 @@ def direct_and_tag(G, source = None):
 	return G2
 
 def chain_decomposition(G, source = None):
+	""" Decomposes G into chains. The first three chains form a K23.
+		A chain is a tuple (start, first node, last node, parent, type), where
+		parent is the number of the chain that has last node as inner vertex and
+		type is one of 1, 2, 3.
+		Assigns a chain to every edge.
+		Returns a list of chains."""
 	if source == None:
 		source = (G.nodes_iter()).next()
 
@@ -72,7 +70,7 @@ def chain_decomposition(G, source = None):
 
 	for u,v in G.edges():
 		print u,v, G[u][v]
-		
+
 	chains = find_k23(G, source)
 	chain_number = 3
 	for x in nx.dfs_preorder_nodes(G,source):
@@ -89,18 +87,29 @@ def chain_decomposition(G, source = None):
 
 	check_chain_decomposition(G, chains)
 
-	return G
+	chains = classify_chains(G, chains)
 
-def chain_edge_iter(G, chain):
-	start, next, last, _ = chain
-	assert G[start][next]
+	return chains
 
-	yield start, next
-	p = G.node[next]['parent']
-	while next != last:
-		yield next, p
-		next = p
-		p = G.node[p]['parent']
+def classify_chains(G, chains):
+	""" Classifies chains into three types.
+		1. start and end are contained in the parent chain
+		2. start == start(parent)
+		3. Otherwise
+		Chain 0 is a special case and has type None
+	"""
+	updated_chains = [chain[0] + (None,)]
+	dfi = nx.get_node_attributes(G,'dfi')
+	for chain in chains:
+		p = chains[parent(chain)]
+		if start(chain) == start(p): 
+			updated_chains.append(chain + (2,)) 
+		elif dfi[start(chain)] >= dfi[end(p)]:
+			updated_chains.append(chain + (1,))
+		else:
+			updated_chains.append(chain + (3,))
+
+	return updated_chains
 
 def find_k23(G, source):
 	succ = G.successors(source)
@@ -146,6 +155,19 @@ def parent(chain):
 	return chain[3]
 def num(G, chain):
 	return G[chain[0]][chain[1]]['chain']
+def type(chain):
+	return chain[4]
+	
+def chain_edge_iter(G, chain):
+	start, next, last, _ = chain
+	assert G[start][next]
+
+	yield start, next
+	p = G.node[next]['parent']
+	while next != last:
+		yield next, p
+		next = p
+		p = G.node[p]['parent']
 
 def check_chain_decomposition(G, chains):
 	for (u,v) in G.edges_iter():
@@ -156,6 +178,14 @@ def check_chain_decomposition(G, chains):
 		for u,v in chain_edge_iter(G, chain):
 			assert G[u][v]['chain'] == i, str(chain) + '\n' + str(G[u][v]) + '\n' + str(i)
 
+def toStr(G):
+	attr = nx.get_edge_attributes(G,'type')
+	l = []
+	for (u,v) in G.edges_iter():
+		l.append(str(u)+'-'+str(v)+' '+str(attr[(u,v)]))
+	return '\n'.join(l)
+
+nx.Graph.__str__ = toStr
 
 def check_basic_information(G):
 	assert nx.is_directed(G), "G is not directed!"
