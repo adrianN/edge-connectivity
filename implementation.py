@@ -1,4 +1,5 @@
 import networkx as nx
+import random_graph as rg
 
 def dfs(G,source=None):
 	"""Produce edges in a depth-first-search starting at source."""
@@ -60,13 +61,13 @@ class Chain:
 		self.start = start
 		self.first_node = first_node
 		self.end = end
-		self.parent = parent
+		self.parent = chains[parent] if chains else None
 		self.type = type
 		self.type3 = []
 		self.children12 = []
 		self.graph = G
 		if type in (1,2):
-			parent.add_child12(self)
+			self.parent.add_child12(self)
 		elif type == 3:
 			chain = chains[inner_node_of(self.graph, start)]
 			chain.add_type3(self)
@@ -192,8 +193,8 @@ def find_k23(G, source):
 
 	C = []
 	C.append(Chain(G, chains[0][0], chains[0][1], chains[0][-1], None, None, None))
-	C.append(Chain(G, chains[1][0], chains[1][1], chains[1][-1], C[0], 2, None))
-	C.append(Chain(G, chains[2][0], chains[2][1], chains[2][-1], C[0], 2, None))
+	C.append(Chain(G, chains[1][0], chains[1][1], chains[1][-1], 0, 2, C))
+	C.append(Chain(G, chains[2][0], chains[2][1], chains[2][-1], 0, 2, C))
 	return C
 
 
@@ -237,6 +238,6 @@ def check_basic_information(G):
 		assert edge_type[(u,v)] == 'back' and dfi[u]<dfi[v] or edge_type[(u,v)] == 'tree' and dfi[u]>dfi[v]
 		assert not edge_type[(u,v)] == 'tree' or parent[u] == v
 
-G = nx.complete_graph(4)
+G = rg.make_simple(rg.random_3_edge_connected(100))
 G2 = chain_decomposition(G)
 print map(str,G2)
