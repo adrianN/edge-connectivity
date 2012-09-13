@@ -55,6 +55,50 @@ def direct_and_tag(G, source = None):
 
 	return G2
 
+class Chain:
+	def __init__(self, G, start, first_node, end, parent, type, chains):
+		self.start = start
+		self.first_node = first_node
+		self.end = end
+		self.parent = parent
+		self.type = type
+		self.type3 = []
+		self.children12 = []
+		self.graph = G
+		if type in (1,2):
+			parent.add_child12(self)
+		elif type == 3:
+			chain = chains[inner_node_of(self.graph, start)]
+			chain.add_type3(self)
+
+	def num(self):
+		return self.graph[self.start][self.first_node]['chain']
+
+	def add_type3(self, chain):
+		self.type3.append(chain)
+
+	def add_child12(self, chain):
+		self.children12.append(chain)
+
+	def edges(self):
+		G = self.graph
+
+		start = self.start
+		next = self.first_node
+		last = self.end
+		assert G[start][next]
+
+		yield start, next
+		p = G.node[next]['parent']
+		while next != last:
+			yield next, p
+			next = p
+			p = G.node[p]['parent']
+
+	def __str__(self):
+		return str((self.start, self.first_node, self.end, self.type))
+
+
 def chain_decomposition(G, source = None):
 	""" Decomposes G into chains. The first three chains form a K23.
 		A chain is a tuple (start, first node, last node, parent, type), where
@@ -82,34 +126,37 @@ def chain_decomposition(G, source = None):
 
 			if len(chain)>1:
 				G.add_path(chain, chain = chain_number)
-				chains.append((chain[0], chain[1], chain[-1],G[chain[-1]][u]['chain']))
+				start, first_node, last_node, parent = chain[0], chain[1], chain[-1], G[chain[-1]][u]['chain']
+				chains.append(Chain(
+						G,
+						start,
+						first_node,
+						last_node,
+						parent,
+						classify_chain(G, start, chains[parent]),
+						chains))
 				chain_number = chain_number + 1
 
 	check_chain_decomposition(G, chains)
 
-	chains = classify_chains(G, chains)
-
 	return chains
 
-def classify_chains(G, chains):
+def classify_chain(G, s, p):
 	""" Classifies chains into three types.
 		1. start and end are contained in the parent chain
 		2. start == start(parent)
 		3. Otherwise
 		Chain 0 is a special case and has type None
 	"""
-	updated_chains = [chain[0] + (None,)]
 	dfi = nx.get_node_attributes(G,'dfi')
-	for chain in chains:
-		p = chains[parent(chain)]
-		if start(chain) == start(p): 
-			updated_chains.append(chain + (2,)) 
-		elif dfi[start(chain)] >= dfi[end(p)]:
-			updated_chains.append(chain + (1,))
-		else:
-			updated_chains.append(chain + (3,))
 
-	return updated_chains
+	if s == p.start: 
+		return 2
+	elif dfi[s] >= dfi[p.end]:
+		return 1
+	else:
+		return 3
+
 
 def find_k23(G, source):
 	succ = G.successors(source)
@@ -143,39 +190,27 @@ def find_k23(G, source):
 		chains[i].append(stop)
 		G.add_path(chains[i], chain=i)
 
-	return [(chains[0][0], chains[0][1], chains[0][-1], None), 
-			(chains[1][0], chains[1][1], chains[1][-1], 0),
-			(chains[2][0], chains[2][1], chains[2][-1], 0)]
+	C = []
+	C.append(Chain(G, chains[0][0], chains[0][1], chains[0][-1], None, None, None))
+	C.append(Chain(G, chains[1][0], chains[1][1], chains[1][-1], C[0], 2, None))
+	C.append(Chain(G, chains[2][0], chains[2][1], chains[2][-1], C[0], 2, None))
+	return C
 
-def start(chain):
-	return chain[0]
-def end(chain):
-	return chain[2]
-def parent(chain):
-	return chain[3]
-def num(G, chain):
-	return G[chain[0]][chain[1]]['chain']
-def type(chain):
-	return chain[4]
-	
-def chain_edge_iter(G, chain):
-	start, next, last, _ = chain
-	assert G[start][next]
 
-	yield start, next
-	p = G.node[next]['parent']
-	while next != last:
-		yield next, p
-		next = p
-		p = G.node[p]['parent']
+def inner_node_of(G, node):
+	try:
+		p = G.node[node]['parent']
+		return G[node][p]['chain']
+	except KeyError:
+		return None
 
 def check_chain_decomposition(G, chains):
 	for (u,v) in G.edges_iter():
 		assert 'chain' in G[u][v]
 
 	for (i,chain) in enumerate(chains):
-		assert num(G,chain) == i, str(i) + '\t' + str(chain) + '\t' + str(num(G,chain))
-		for u,v in chain_edge_iter(G, chain):
+		assert chain.num() == i, str(i) + '\t' + str(chain) + '\t' + str(chain.num())
+		for u,v in chain.edges():
 			assert G[u][v]['chain'] == i, str(chain) + '\n' + str(G[u][v]) + '\n' + str(i)
 
 def toStr(G):
@@ -204,4 +239,4 @@ def check_basic_information(G):
 
 G = nx.complete_graph(4)
 G2 = chain_decomposition(G)
-check_basic_information(G2)
+print map(str,G2)
