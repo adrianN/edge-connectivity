@@ -41,6 +41,19 @@ def dfs(G,source=None):
 			except StopIteration:
 				stack.pop()
 
+def tree_path_edges(G,u,v):
+	p = u
+	while u!=v:
+		u = p
+		p = G.node[p]['parent']
+		yield u,p
+
+def tree_path_nodes(G,u,v):
+	for x,y in tree_path_edges(G,u,v):
+		yield x
+	
+	yield y
+
 def direct_and_tag(G, source = None):
 	""" Makes tree edges go up, back edges go down. Computes dfi, 
 		parent for nodes and type (back, tree) for edges"""
@@ -65,6 +78,7 @@ def direct_and_tag(G, source = None):
 	depth_first_index = dict(map((lambda (x,y): (y,x)), enumerate(positions)))
 	nx.set_node_attributes(G2,'dfi',depth_first_index)
 	nx.set_node_attributes(G2,'parent',parent)
+	nx.set_node_attributes(G2,'real', dict.fromkeys(G2.nodes_iter(), False))
 
 	return G2
 
@@ -169,8 +183,10 @@ def find_k23(G, source):
 def add_chains(G, chains):
 	for chain in chains:
 		assert chain.is_added
+		#all type 2 chains can be added, since chain.start is real
 		for child in chain.children2:
 			child.is_added=True
+
 
 
 G = rg.make_simple(rg.random_3_edge_connected(100))
