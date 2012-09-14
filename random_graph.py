@@ -73,15 +73,3 @@ def make_simple(G):
 	simple = nx.Graph()
 	simple.add_edges_from(G.edges())
 	return simple
-
-G = random_3_edge_connected(10)
-
-for e in G.edges():
-	print e
-
-print '---------'
-
-G = make_simple(G)
-
-for e in G.edges():
-	print e
