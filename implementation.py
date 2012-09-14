@@ -25,8 +25,21 @@ def add_chains(G, chains):
 					chain.add()
 					added += 1
 			if added==old_added:
-				print [c for c in chains if not c.is_added]
-				raise Exception("can't add all chains of type 1")
+				raise Exception("can't add all chains of type 1 " + str([str(c) for c in chains if  not c.is_added]))
+
+	def add_type3(chains):
+		for child in chains:
+			if child.is_added: #this might be the second run and we already have added some
+				continue
+			l = []
+			c = child
+			print 'add with ancestors ', c
+			while not c.is_added:
+				l.append(c)
+				c = c.parent
+			if is_addable(l[-1]):
+				while l:
+					l.pop().add()
 
 	for chain in chains:
 		assert chain.is_added
@@ -35,23 +48,20 @@ def add_chains(G, chains):
 			if not child.is_added: child.add()
 
 		#Chains from type3 can be added with their ancestors because child.start is above chain.end
-		for child in chain.type3:
-			if child.is_added:
-				print "this shouldn't happen"
-				continue
-			l = []
-			c = child
-			while not c.is_added:
-				l.append(c)
-				c = c.parent
-			while l:
-				l.pop().add()
+		add_type3(chain.type3)
 
 		order_and_add(chain.children1)
 
+		add_type3(chain.type3)
 
 
-G = rg.make_simple(rg.random_3_edge_connected(10))
-G, chains = chain_decomposition(G)
-check_chain_decomposition(G, chains)
-add_chains(G,chains)
+for i in range(100):
+	print "===============",i,"==============="
+	G = rg.make_simple(rg.random_3_edge_connected(100))
+	G, chains = chain_decomposition(G)
+
+	print to_dot(G)
+	print '\n'.join(map(str,chains))
+	print 
+	check_chain_decomposition(G, chains)
+	add_chains(G,chains)

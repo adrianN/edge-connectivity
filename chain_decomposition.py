@@ -57,10 +57,7 @@ def direct_and_tag(G, source = None):
 	nx.set_node_attributes(G2,'parent',parent)
 	nx.set_node_attributes(G2,'real', dict.fromkeys(G2.nodes_iter(), False))
 
-	return G2
-
-
-
+	return G2, positions
 
 def chain_decomposition(G, source = None):
 	""" Decomposes G into chains. The first three chains form a K23.
@@ -69,12 +66,15 @@ def chain_decomposition(G, source = None):
 	if source == None:
 		source = (G.nodes_iter()).next()
 
-	G = direct_and_tag(G, source)
+	G, nodes_in_dfs_order = direct_and_tag(G, source)
 	check_basic_information(G)
 
 	chains = find_k23(G, source)
 	chain_number = 3
-	for x in nx.dfs_preorder_nodes(G,source):
+	num = 0
+	for x in nodes_in_dfs_order:
+		assert G.node[x]['dfi'] == num
+		num += 1
 		for u in G.successors(x):
 			chain = [x]
 			while not 'chain' in G[chain[-1]][u]:
@@ -107,9 +107,9 @@ def classify_chain(G, s, p):
 	"""
 	dfi = nx.get_node_attributes(G,'dfi')
 
-	if s == p.start: 
+	if s == p.start or p.num()==0 and s==p.end: 
 		return 2
-	elif dfi[s] >= dfi[p.end]:
+	elif inner_node_of(G,s) == p.num():
 		return 1
 	else:
 		return 3

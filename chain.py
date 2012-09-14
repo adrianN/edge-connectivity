@@ -33,6 +33,7 @@ class Chain:
 		self.children2.append(chain)
 
 	def add(self):
+		"""Assert that a chain can be added and if yes, do so"""
 		assert is_addable(self), "Can't add " + str(self)
 		self.is_added = True
 		self.graph.node[self.start]['real'] = True
@@ -57,11 +58,18 @@ class Chain:
 		yield v
 
 	def __str__(self):
-		return str((self.start, self.first_node, self.end, self.type, self.num()))
+		return str((
+			self.start, 
+			self.first_node, 
+			self.end, 
+			self.type, 
+			self.num(), 
+			self.parent.num() if self.parent else None))
 
 def is_addable(chain):
 	if chain.num() == 0: return True
 	if chain.is_added: return False
+
 	#only bad case: both endpoints not real and no real node between them
 	G = chain.graph
 	if G.node[chain.start]['real'] or G.node[chain.end]['real']:
@@ -71,9 +79,4 @@ def is_addable(chain):
 			tree_path_nodes(chain.graph, chain.end, chain.start)))
 
 
-def inner_node_of(G, node):
-	try:
-		p = G.node[node]['parent']
-		return G[node][p]['chain']
-	except KeyError:
-		return None
+
