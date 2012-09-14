@@ -2,6 +2,7 @@ import networkx as nx
 import random_graph as rg
 from tests import *
 from chain import *
+from helper import *
 
 def toStr(G):
 	attr = nx.get_edge_attributes(G,'type')
@@ -41,18 +42,6 @@ def dfs(G,source=None):
 			except StopIteration:
 				stack.pop()
 
-def tree_path_edges(G,u,v):
-	p = u
-	while u!=v:
-		u = p
-		p = G.node[p]['parent']
-		yield u,p
-
-def tree_path_nodes(G,u,v):
-	for x,y in tree_path_edges(G,u,v):
-		yield x
-	
-	yield y
 
 def direct_and_tag(G, source = None):
 	""" Makes tree edges go up, back edges go down. Computes dfi, 
@@ -95,9 +84,6 @@ def chain_decomposition(G, source = None):
 	G = direct_and_tag(G, source)
 	check_basic_information(G)
 
-	for u,v in G.edges():
-		print u,v, G[u][v]
-
 	chains = find_k23(G, source)
 	chain_number = 3
 	for x in nx.dfs_preorder_nodes(G,source):
@@ -122,7 +108,7 @@ def chain_decomposition(G, source = None):
 
 	check_chain_decomposition(G, chains)
 
-	return chains
+	return G, chains
 
 def classify_chain(G, s, p):
 	""" Classifies chains into three types.
@@ -177,18 +163,48 @@ def find_k23(G, source):
 	C.append(Chain(G, chains[0][0], chains[0][1], chains[0][-1], None, None, None))
 	C.append(Chain(G, chains[1][0], chains[1][1], chains[1][-1], 0, 2, C))
 	C.append(Chain(G, chains[2][0], chains[2][1], chains[2][-1], 0, 2, C))
-	map(lambda x: x.add(), C)
+	C[0].add()
 	return C
 
 def add_chains(G, chains):
+	def order_and_add(chains):
+		#todo linear time
+		added = 0
+		chains = [c for c in chains if not c.is_added]
+		while added < len(chains):
+			old_added = added
+			for chain in chains:
+				if is_addable(chain):
+					chain.add()
+					added += 1
+			if added==old_added:
+				print [c for c in chains if not c.is_added]
+				raise Exception("can't add all chains of type 1")
+
 	for chain in chains:
 		assert chain.is_added
 		#all type 2 chains can be added, since chain.start is real
 		for child in chain.children2:
-			child.is_added=True
+			if not child.is_added: child.add()
+
+		#Chains from type3 can be added because child.start is above chain.end
+		for child in chain.type3:
+			if child.is_added:
+				print "this shouldn't happen"
+				continue
+			l = []
+			c = child
+			while not c.is_added:
+				l.append(c)
+				c = c.parent
+			while l:
+				l.pop().add()
+
+		order_and_add(chain.children1)
 
 
 
-G = rg.make_simple(rg.random_3_edge_connected(100))
-G2 = chain_decomposition(G)
-print map(str,G2)
+G = rg.make_simple(rg.random_3_edge_connected(10))
+G, chains = chain_decomposition(G)
+check_chain_decomposition(G, chains)
+add_chains(G,chains)

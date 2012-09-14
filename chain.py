@@ -1,3 +1,5 @@
+from helper import *
+
 class Chain:
 	def __init__(self, G, start, first_node, end, parent, type, chains):
 		self.start = start
@@ -31,9 +33,11 @@ class Chain:
 		self.children2.append(chain)
 
 	def add(self):
+		assert is_addable(self), "Can't add " + str(self)
 		self.is_added = True
 		self.graph.node[self.start]['real'] = True
 		self.graph.node[self.end]['real'] = True
+		print str(self), list(self.nodes())
 
 	def edges(self):
 		G = self.graph
@@ -44,14 +48,27 @@ class Chain:
 		assert G[start][next]
 
 		yield start, next
-		p = G.node[next]['parent']
-		while next != last:
-			yield next, p
-			next = p
-			p = G.node[p]['parent']
+		for e in tree_path_edges(G,next,last):
+			yield e
+
+	def nodes(self):
+		for u,v in self.edges():
+			yield u
+		yield v
 
 	def __str__(self):
-		return str((self.start, self.first_node, self.end, self.type))
+		return str((self.start, self.first_node, self.end, self.type, self.num()))
+
+def is_addable(chain):
+	if chain.num() == 0: return True
+	if chain.is_added: return False
+	#only bad case: both endpoints not real and no real node between them
+	G = chain.graph
+	if G.node[chain.start]['real'] or G.node[chain.end]['real']:
+		return True
+
+	return any(map(lambda x: G.node[x]['real'], 
+			tree_path_nodes(chain.graph, chain.end, chain.start)))
 
 
 def inner_node_of(G, node):
