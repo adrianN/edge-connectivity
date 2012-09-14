@@ -1,9 +1,7 @@
 import networkx as nx
 import random_graph as rg
-from tests import *
-from chain import *
-from helper import *
 from chain_decomposition import *
+from tests import *
 
 def toStr(G):
 	attr = nx.get_edge_attributes(G,'type')
@@ -36,7 +34,7 @@ def add_chains(G, chains):
 		for child in chain.children2:
 			if not child.is_added: child.add()
 
-		#Chains from type3 can be added because child.start is above chain.end
+		#Chains from type3 can be added with their ancestors because child.start is above chain.end
 		for child in chain.type3:
 			if child.is_added:
 				print "this shouldn't happen"
