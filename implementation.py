@@ -1,6 +1,17 @@
 import networkx as nx
 import random_graph as rg
 from tests import *
+from chain import *
+
+def toStr(G):
+	attr = nx.get_edge_attributes(G,'type')
+	l = []
+	for (u,v) in G.edges_iter():
+		l.append(str(u)+'-'+str(v)+' '+str(attr[(u,v)]))
+	return '\n'.join(l)
+
+nx.Graph.__str__ = toStr
+
 
 def dfs(G,source=None):
 	"""Produce edges in a depth-first-search starting at source."""
@@ -57,55 +68,11 @@ def direct_and_tag(G, source = None):
 
 	return G2
 
-class Chain:
-	def __init__(self, G, start, first_node, end, parent, type, chains):
-		self.start = start
-		self.first_node = first_node
-		self.end = end
-		self.parent = chains[parent] if chains else None
-		self.type = type
-		self.type3 = []
-		self.children12 = []
-		self.graph = G
-		if type in (1,2):
-			self.parent.add_child12(self)
-		elif type == 3:
-			chain = chains[inner_node_of(self.graph, start)]
-			chain.add_type3(self)
 
-	def num(self):
-		return self.graph[self.start][self.first_node]['chain']
-
-	def add_type3(self, chain):
-		self.type3.append(chain)
-
-	def add_child12(self, chain):
-		self.children12.append(chain)
-
-	def edges(self):
-		G = self.graph
-
-		start = self.start
-		next = self.first_node
-		last = self.end
-		assert G[start][next]
-
-		yield start, next
-		p = G.node[next]['parent']
-		while next != last:
-			yield next, p
-			next = p
-			p = G.node[p]['parent']
-
-	def __str__(self):
-		return str((self.start, self.first_node, self.end, self.type))
 
 
 def chain_decomposition(G, source = None):
 	""" Decomposes G into chains. The first three chains form a K23.
-		A chain is a tuple (start, first node, last node, parent, type), where
-		parent is the number of the chain that has last node as inner vertex and
-		type is one of 1, 2, 3.
 		Assigns a chain to every edge.
 		Returns a list of chains."""
 	if source == None:
@@ -196,26 +163,14 @@ def find_k23(G, source):
 	C.append(Chain(G, chains[0][0], chains[0][1], chains[0][-1], None, None, None))
 	C.append(Chain(G, chains[1][0], chains[1][1], chains[1][-1], 0, 2, C))
 	C.append(Chain(G, chains[2][0], chains[2][1], chains[2][-1], 0, 2, C))
+	map(lambda x: x.add(), C)
 	return C
 
-
-def inner_node_of(G, node):
-	try:
-		p = G.node[node]['parent']
-		return G[node][p]['chain']
-	except KeyError:
-		return None
-
-
-def toStr(G):
-	attr = nx.get_edge_attributes(G,'type')
-	l = []
-	for (u,v) in G.edges_iter():
-		l.append(str(u)+'-'+str(v)+' '+str(attr[(u,v)]))
-	return '\n'.join(l)
-
-nx.Graph.__str__ = toStr
-
+def add_chains(G, chains):
+	for chain in chains:
+		assert chain.is_added
+		for child in chain.children2:
+			child.is_added=True
 
 
 G = rg.make_simple(rg.random_3_edge_connected(100))
