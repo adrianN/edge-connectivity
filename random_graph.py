@@ -66,7 +66,7 @@ def make_simple(G):
 	
 	for (u,v,m) in multi_edge_iter(G):
 		path = []
-		for i in range(m):
+		for i in range(m-1):
 			path.append(split_edge(G,(u,v)))
 		G.add_path(path)
 
