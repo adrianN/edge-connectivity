@@ -31,7 +31,7 @@ class Chain:
 		self.is_added = True
 		self.graph.node[self.start]['real'] = True
 		self.graph.node[self.end]['real'] = True
-		print str(self), list(self.nodes())
+		print list(self.nodes())
 
 	def edges(self):
 		G = self.graph

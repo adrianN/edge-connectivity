@@ -62,7 +62,6 @@ def add_chains(G, chains):
 			assert chain.type == 3
 			l = []
 			c = chain
-			print 'add with ancestors ', c
 			while not c.is_added:
 				l.append(c)
 				c = c.parent
@@ -72,7 +71,6 @@ def add_chains(G, chains):
 
 	for chain in chains:
 		assert chain.is_added, "Chain " + str(chain) + " is not yet added"
-		print 'Working on', chain
 
 		segments = []
 		for c in chain.children[0]:
@@ -96,13 +94,10 @@ def add_chains(G, chains):
 
 
 
-for i in range(100):
+for i in range(1000):
 	print "===============",i,"==============="
-	G = rg.make_simple(rg.random_3_edge_connected(10))
+	G = rg.make_simple(rg.random_3_edge_connected(100))
 	G, chains = chain_decomposition(G)
 
-	print to_dot(G)
-	print '\n'.join(map(str,chains))
-	print 
 	check_chain_decomposition(G, chains)
 	add_chains(G,chains)
