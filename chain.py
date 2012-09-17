@@ -8,15 +8,11 @@ class Chain:
 		self.parent = chains[parent] if chains else None
 		self.type = type
 		self.type3 = []
-		self.children1 = []
-		self.children2 = []
+		self.children = [[],[],[]]
 		self.graph = G
 		self.is_added = False
-		if type == 1:
-			self.parent.add_child1(self)
-		elif type == 2:
-			self.parent.add_child2(self)
-		elif type == 3:
+		if parent != None: self.parent.add_child(self)
+		if type == 3:
 			chain = chains[inner_node_of(self.graph, start)]
 			chain.add_type3(self)
 
@@ -26,11 +22,8 @@ class Chain:
 	def add_type3(self, chain):
 		self.type3.append(chain)
 
-	def add_child1(self, chain):
-		self.children1.append(chain)
-
-	def add_child2(self, chain):
-		self.children2.append(chain)
+	def add_child(self,chain):
+		self.children[chain.type - 1].append(chain)
 
 	def add(self):
 		"""Assert that a chain can be added and if yes, do so"""
@@ -59,12 +52,12 @@ class Chain:
 
 	def __str__(self):
 		return str((
-			self.start, 
-			self.first_node, 
-			self.end, 
-			self.type, 
-			self.num(), 
-			self.parent.num() if self.parent else None))
+			"start", self.start, 
+			"fn", self.first_node, 
+			"end", self.end, 
+			"type", self.type, 
+			"num", self.num(), 
+			"parent", self.parent.num() if self.parent else None))
 
 def is_addable(chain):
 	if chain.num() == 0: return True

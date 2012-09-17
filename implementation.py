@@ -12,27 +12,56 @@ def toStr(G):
 
 nx.Graph.__str__ = toStr
 
+class Segment:
+	def __init__(self, chain):
+		self.head = chain
+		self.starters = []
+		self.attachment_points = [chain.start, chain.end]
+		chain.segment = self
+		
+def make_segment(chain):
+	chains = []
+	segment = None
+	source = chain
+	while not chain.is_added:
+		try:
+			segment = chain.segment
+			break
+		except AttributeError:
+			chains.append(chain)
+			chain = chain.parent
+	if not segment: return None
+	
+	segment.attachment_points.append(source.start)
+	segment.starters.append(source)
+	for c in chains: c.segment = segment
+	return segment
 
 def add_chains(G, chains):
-	def order_and_add(chains):
-		#todo linear time
+	def order_and_add(segments):
 		added = 0
-		chains = [c for c in chains if not c.is_added]
-		while added < len(chains):
-			old_added = added
-			for chain in chains:
-				if is_addable(chain):
-					chain.add()
+		added_something = True
+		while added != len(segments):
+			if not added_something: raise Exception("can't add all segments, "+str(added)+ " " + str(len(segments)))
+			added_something = False
+			for s in segments:
+				head = s.head
+				assert head.type == 1
+				if is_addable(head):
+					head.add()
+					map(add_type3,s.starters)
+					for v in s.attachment_points:
+						assert G.node[v]['real']
+					added_something = True
 					added += 1
-			if added==old_added:
-				raise Exception("can't add all chains of type 1 " + str([str(c) for c in chains if  not c.is_added]))
-
-	def add_type3(chains):
-		for child in chains:
-			if child.is_added: #this might be the second run and we already have added some
-				continue
+				else:
+					print "can't add ",head
+	
+	def add_type3(chain):
+			assert not chain.is_added
+			assert chain.type == 3
 			l = []
-			c = child
+			c = chain
 			print 'add with ancestors ', c
 			while not c.is_added:
 				l.append(c)
@@ -42,22 +71,34 @@ def add_chains(G, chains):
 					l.pop().add()
 
 	for chain in chains:
-		assert chain.is_added
-		#all type 2 chains can be added, since chain.start is real
-		for child in chain.children2:
+		assert chain.is_added, "Chain " + str(chain) + " is not yet added"
+		print 'Working on', chain
+
+		segments = []
+		for c in chain.children[0]:
+			segments.append(Segment(c))
+
+		
+		for c in chain.type3:
+			segment = make_segment(c)
+			if not segment:
+				add_type3(c)
+
+
+				#all type 2 chains can be added, since chain.start is real
+		for child in chain.children[1]:
 			if not child.is_added: child.add()
 
-		#Chains from type3 can be added with their ancestors because child.start is above chain.end
-		add_type3(chain.type3)
+		order_and_add(segments)
 
-		order_and_add(chain.children1)
+		for c in chain.children[0] + chain.children[1] + chain.type3:
+			assert c.is_added, "didn't add " +str(c)
 
-		add_type3(chain.type3)
 
 
 for i in range(100):
 	print "===============",i,"==============="
-	G = rg.make_simple(rg.random_3_edge_connected(100))
+	G = rg.make_simple(rg.random_3_edge_connected(10))
 	G, chains = chain_decomposition(G)
 
 	print to_dot(G)
