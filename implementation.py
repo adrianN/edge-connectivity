@@ -31,8 +31,10 @@ class Checker:
 
 	def verify(self):
 		#TODO proper isomorphism check
-		if not len(self.orig) == len(self.rebuild): return False
-		if not len(self.orig.edges()) == len(self.rebuild.edges()): return False
+		if not len(self.orig) == len(self.rebuild): 
+			raise Exception("different number of nodes")
+		if not len(self.orig.edges()) == len(self.rebuild.edges()): 
+			raise Exception("different number of edges")
 
 		def smoothe(u):
 			a,b = self.rebuild.neighbors(u)
@@ -55,7 +57,9 @@ class Checker:
 			if case == 0: #u,v both subdivide an edge
 				a,b = [x for x in self.rebuild.neighbors(u) if not x == v]
 				c,d = [x for x in self.rebuild.neighbors(v) if not x == u]
-				if len(set([a,b,c,d])) < 3: return False
+				if len(set([a,b,c,d])) < 3: 
+					raise Exception("Path subdivides same edge twice")
+			#TODO loops
 			elif case == 1:
 				pass # always okay
 			elif case == 2:
