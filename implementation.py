@@ -25,14 +25,14 @@ class Checker:
 		self.rebuild = nx.MultiGraph()
 		self.paths = []
 
-	def add_path(self, path):
+	def add(self, path):
 		self.rebuild.add_path(path)
 		self.paths.append(path)
 
 	def verify(self):
 		#TODO proper isomorphism check
 		if not len(self.orig) == len(self.rebuild): return False
-		if not len(self.orig.edges()) == len(self.rebuild.edges): return False
+		if not len(self.orig.edges()) == len(self.rebuild.edges()): return False
 
 		def smoothe(u):
 			a,b = self.rebuild.neighbors(u)
@@ -44,8 +44,8 @@ class Checker:
 			for x in (u,v):
 				if self.rebuild.degree(x) == 2: smoothe(x)
 
-		while len(paths)>3:
-			p = paths.pop()
+		while len(self.paths)>3:
+			p = self.paths.pop()
 			u,v = p[0],p[-1]
 			if not self.rebuild.has_edge(u,v): return False
 			case = 0
@@ -85,7 +85,7 @@ def make_segment(chain):
 	for c in chains: c.segment = segment
 	return segment
 
-def add_chains(G, chains):
+def add_chains(G, chains, checker):
 	def order_and_add(segments):
 		added = 0
 		added_something = True
@@ -138,12 +138,20 @@ def add_chains(G, chains):
 		for c in chain.children[0] + chain.children[1] + chain.type3:
 			assert c.is_added, "didn't add " +str(c)
 
-
+def check_connectivity(G):
+	checker = Checker(G)
+	G, chains = chain_decomposition(G, checker)
+	check_chain_decomposition(G,chains) # optional
+	try:
+		add_chains(G, chains, checker)
+	except Exception as e:
+		print e
+		return False
+	if not checker.verify():
+		raise Exception('certificate invalid')
+	return True
 
 for i in range(1000):
 	print "===============",i,"==============="
 	G = rg.make_simple(rg.random_3_edge_connected(100))
-	G, chains = chain_decomposition(G)
-
-	check_chain_decomposition(G, chains)
-	add_chains(G,chains)
+	check_connectivity(G)

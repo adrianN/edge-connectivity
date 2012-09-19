@@ -1,7 +1,7 @@
 from helper import *
 
 class Chain:
-	def __init__(self, G, start, first_node, end, parent, type, chains):
+	def __init__(self, G, start, first_node, end, parent, type, chains, checker):
 		self.start = start
 		self.first_node = first_node
 		self.end = end
@@ -11,6 +11,7 @@ class Chain:
 		self.children = [[],[],[]]
 		self.graph = G
 		self.is_added = False
+		self.checker = checker
 		if parent != None: self.parent.add_child(self)
 		if type == 3:
 			chain = chains[inner_node_of(self.graph, start)]
@@ -31,7 +32,7 @@ class Chain:
 		self.is_added = True
 		self.graph.node[self.start]['real'] = True
 		self.graph.node[self.end]['real'] = True
-		print list(self.nodes())
+		self.checker.add(list(self.nodes()))
 
 	def edges(self):
 		G = self.graph

@@ -59,17 +59,16 @@ def direct_and_tag(G, source = None):
 
 	return G2, positions
 
-def chain_decomposition(G, source = None):
+def chain_decomposition(G, checker):
 	""" Decomposes G into chains. The first three chains form a K23.
 		Assigns a chain to every edge.
 		Returns a list of chains."""
-	if source == None:
-		source = (G.nodes_iter()).next()
+	source = (G.nodes_iter()).next()
 
 	G, nodes_in_dfs_order = direct_and_tag(G, source)
 	check_basic_information(G)
 
-	chains = find_k23(G, source)
+	chains = find_k23(G, source, checker)
 	chain_number = 3
 	num = 0
 	for x in nodes_in_dfs_order:
@@ -91,7 +90,8 @@ def chain_decomposition(G, source = None):
 						last_node,
 						parent,
 						classify_chain(G, start, chains[parent]),
-						chains))
+						chains,
+						checker))
 				chain_number = chain_number + 1
 
 	check_chain_decomposition(G, chains)
@@ -115,7 +115,7 @@ def classify_chain(G, s, p):
 		return 3
 
 
-def find_k23(G, source):
+def find_k23(G, source, checker):
 	succ = G.successors(source)
 	cycle = set()
 	cycle.add(source)
@@ -148,8 +148,8 @@ def find_k23(G, source):
 		G.add_path(chains[i], chain=i)
 
 	C = []
-	C.append(Chain(G, chains[0][0], chains[0][1], chains[0][-1], None, None, None))
-	C.append(Chain(G, chains[1][0], chains[1][1], chains[1][-1], 0, 2, C))
-	C.append(Chain(G, chains[2][0], chains[2][1], chains[2][-1], 0, 2, C))
+	C.append(Chain(G, chains[0][0], chains[0][1], chains[0][-1], None, None, None, checker))
+	C.append(Chain(G, chains[1][0], chains[1][1], chains[1][-1], 0, 2, C, checker))
+	C.append(Chain(G, chains[2][0], chains[2][1], chains[2][-1], 0, 2, C, checker))
 	C[0].add()
 	return C
