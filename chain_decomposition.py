@@ -51,6 +51,7 @@ def direct_and_tag(G, source = None):
 			if not x in seen:
 				seen.add(x)
 				positions.append(x)
+				if not G.degree(x) >= 3: raise Exception('min degree')
 
 	depth_first_index = dict(map((lambda (x,y): (y,x)), enumerate(positions)))
 	nx.set_node_attributes(G2,'dfi',depth_first_index)
