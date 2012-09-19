@@ -152,5 +152,7 @@ def find_k23(G, source, checker):
 	C.append(Chain(G, chains[0][0], chains[0][1], chains[0][-1], None, None, None, checker))
 	C.append(Chain(G, chains[1][0], chains[1][1], chains[1][-1], 0, 2, C, checker))
 	C.append(Chain(G, chains[2][0], chains[2][1], chains[2][-1], 0, 2, C, checker))
-	C[0].add()
+	for i in range(3):
+		C[i].add()
+
 	return C
