@@ -69,6 +69,7 @@ def make_simple(G):
 		for i in range(max(2,m-1)):
 			path.append(split_edge(G,(u,v)))
 		G.add_path(path)
+		print 'simplify path', path
 
 	simple = nx.Graph()
 	simple.add_edges_from(G.edges())

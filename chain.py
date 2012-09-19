@@ -29,6 +29,7 @@ class Chain:
 	def add(self):
 		"""Assert that a chain can be added and if yes, do so"""
 		assert is_addable(self), "Can't add " + str(self)
+		print 'add', self.num(), list(self.nodes())
 		self.is_added = True
 		self.graph.node[self.start]['real'] = True
 		self.graph.node[self.end]['real'] = True

@@ -37,7 +37,11 @@ class Checker:
 			raise Exception("different number of edges")
 
 		def smoothe(u):
+			assert self.rebuild.degree(u)==2
 			a,b = self.rebuild.neighbors(u)
+
+			print 'smoothe',a,u,b
+
 			self.rebuild.remove_node(u)
 			self.rebuild.add_edge(a,b)
 
@@ -48,28 +52,36 @@ class Checker:
 
 		while len(self.paths)>3:
 			p = self.paths.pop()
+			print p,
 			u,v = p[0],p[-1]
-			if not self.rebuild.has_edge(u,v): return False
-			case = 0
-			if self.rebuild.degree(v) > 3: case += 1
-			if self.rebuild.degree(u) > 3: case += 1
+			assert u in self.rebuild
+			assert v in self.rebuild
+			for x in p[1:-1]:
+				if x in self.rebuild: raise Exception('contains existing inner')
+			print 'u', self.rebuild.degree(u), 'v', self.rebuild.degree(v)
+			if u==v:
+				print 'loop'
+				if not self.rebuild.degree(u)>=5: raise Exception("loop at nonreal")
+				continue
 
-			if case == 0: #u,v both subdivide an edge
-				a,b = [x for x in self.rebuild.neighbors(u) if not x == v]
-				c,d = [x for x in self.rebuild.neighbors(v) if not x == u]
-				if len(set([a,b,c,d])) < 3: 
-					raise Exception("Path subdivides same edge twice")
-			#TODO loops
-			elif case == 1:
-				pass # always okay
-			elif case == 2:
-				pass # always okay
-
+			if not self.rebuild.has_edge(u,v): 
+				print u,v
+				nx.set_node_attributes(self.rebuild, 'dfi', dict.fromkeys(self.rebuild.nodes()))
+				nx.set_edge_attributes(self.rebuild, 'chain', dict.fromkeys(self.rebuild.edges()))
+				nx.set_edge_attributes(self.rebuild, 'type', dict.fromkeys(self.rebuild.edges()))
+				print to_dot(self.rebuild)
+				raise Exception("no edge ")
+			
+			if self.rebuild.degree(u) == self.rebuild.degree(v) == 2:
+				raise Exception('divides same edge twice')
+			
 			remove_and_smoothe(u,v)
+			print
 
-		if len(G)!=2 or len(G.edges())!=3:
-			return False
-
+		if len(self.rebuild)!=2 or len(self.rebuild.edges())!=3:
+			print len(G), len(G.edges())
+			raise Exception("graph not a k23 at the end")
+		return True
 		
 def make_segment(chain):
 	chains = []
@@ -144,12 +156,20 @@ def add_chains(G, chains, checker):
 
 def check_connectivity(G):
 	checker = Checker(G)
-	G, chains = chain_decomposition(G, checker)
-	check_chain_decomposition(G,chains) # optional
 	try:
+		G, chains = chain_decomposition(G, checker)
+		check_chain_decomposition(G,chains) # optional
+
+		print to_dot(G)
+
 		add_chains(G, chains, checker)
 	except Exception as e:
 		print e
+		nx.set_node_attributes(G,'dfi', dict.fromkeys(G.nodes()))
+		nx.set_edge_attributes(G,'chain',dict.fromkeys(G.edges()))
+		nx.set_edge_attributes(G,'type',dict.fromkeys(G.edges()))
+
+		print to_dot(G)
 		return False
 	if not checker.verify():
 		raise Exception('certificate invalid')
@@ -157,5 +177,7 @@ def check_connectivity(G):
 
 for i in range(1000):
 	print "===============",i,"==============="
-	G = rg.make_simple(rg.random_3_edge_connected(100))
+	G = rg.make_simple(rg.random_3_edge_connected(10))
+
 	check_connectivity(G)
+	assert naive_connectivity(G)
