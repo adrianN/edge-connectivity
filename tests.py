@@ -23,3 +23,14 @@ def check_chain_decomposition(G, chains):
 		assert chain.num() == i, str(i) + '\t' + str(chain) + '\t' + str(chain.num())
 		for u,v in chain.edges():
 			assert G[u][v]['chain'] == i, str(chain) + '\n' + str(G[u][v]) + '\n' + str(i)
+
+def naive_connectivity(G):
+	for e in G.edges():
+		for e2 in G.edges():
+			G.remove_edge(*e)
+			G.remove_edge(*e2)
+			if not nx.is_connected(G):
+				return False
+			G.add_edge(*e)
+			G.add_edge(*e)
+	return True

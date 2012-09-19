@@ -127,7 +127,7 @@ def find_k23(G, source):
 		s = G.node[s]['parent']
 
 	#find a second chain
-	for s in succ[1:]:
+	for s in sorted(succ[1:], key = lambda x: G.node[x]['dfi'], reverse=True):
 		t = s
 		while not t in cycle:
 			t = G.node[t]['parent']

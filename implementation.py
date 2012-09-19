@@ -18,6 +18,54 @@ class Segment:
 		self.starters = []
 		self.attachment_points = [chain.start, chain.end]
 		chain.segment = self
+
+class Checker:
+	def __init__(self, G):
+		self.orig = G
+		self.rebuild = nx.MultiGraph()
+		self.paths = []
+
+	def add_path(self, path):
+		self.rebuild.add_path(path)
+		self.paths.append(path)
+
+	def verify(self):
+		#TODO proper isomorphism check
+		if not len(self.orig) == len(self.rebuild): return False
+		if not len(self.orig.edges()) == len(self.rebuild.edges): return False
+
+		def smoothe(u):
+			a,b = self.rebuild.neighbors(u)
+			self.rebuild.remove_node(u)
+			self.rebuild.add_edge(a,b)
+
+		def remove_and_smoothe(u,v):
+			self.rebuild.remove_edge(u,v)
+			for x in (u,v):
+				if self.rebuild.degree(x) == 2: smoothe(x)
+
+		while len(paths)>3:
+			p = paths.pop()
+			u,v = p[0],p[-1]
+			if not self.rebuild.has_edge(u,v): return False
+			case = 0
+			if self.rebuild.degree(v) > 3: case += 1
+			if self.rebuild.degree(u) > 3: case += 1
+
+			if case == 0: #u,v both subdivide an edge
+				a,b = [x for x in self.rebuild.neighbors(u) if not x == v]
+				c,d = [x for x in self.rebuild.neighbors(v) if not x == u]
+				if len(set([a,b,c,d])) < 3: return False
+			elif case == 1:
+				pass # always okay
+			elif case == 2:
+				pass # always okay
+
+			remove_and_smoothe(u,v)
+
+		if len(G)!=2 or len(G.edges())!=3:
+			return False
+
 		
 def make_segment(chain):
 	chains = []
@@ -54,8 +102,6 @@ def add_chains(G, chains):
 						assert G.node[v]['real']
 					added_something = True
 					added += 1
-				else:
-					print "can't add ",head
 	
 	def add_type3(chain):
 			assert not chain.is_added

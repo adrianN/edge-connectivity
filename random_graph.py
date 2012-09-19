@@ -12,7 +12,7 @@ def split_edge(G,e):
 	return n
 
 def random_3_edge_connected(n):
-	""" Returns a random 3-edge connected MultiGraph"""
+	""" Returns a random 3-edge connected MultiGraph with roughly n nodes"""
 
 	def add_edge(G):
 		u = random.choice(G.nodes())
