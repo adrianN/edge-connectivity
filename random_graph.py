@@ -50,7 +50,6 @@ def make_simple(G):
 		nodes = G.nodes()[:]
 		for n in nodes:
 			neighbors = sorted(map(lambda x: x[1], G.edges(n)))
-			print 'neighbors', n, neighbors,
 			p = None
 			repetitions = 0
 			for u in neighbors+[-1]:
@@ -61,20 +60,16 @@ def make_simple(G):
 					repetitions = 0
 				else:
 					repetitions += 1
-			print repetitions
 
 
 	for e in G.selfloop_edges():
-		print 'self loop', e
 		G.remove_edge(*e)
 	
 	for (u,v,m) in multi_edge_iter(G):
-		print 'multi', u,v,m
 		path = []
 		for i in range(max(2,m-1)):
 			path.append(split_edge(G,(u,v)))
 		G.add_path(path)
-		print 'simplify path', path
 
 	simple = nx.Graph()
 	simple.add_edges_from(G.edges())

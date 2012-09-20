@@ -51,7 +51,7 @@ def direct_and_tag(G, source = None):
 			if not x in seen:
 				seen.add(x)
 				positions.append(x)
-				if not G.degree(x) >= 3: raise Exception('min degree')
+				if not G.degree(x) >= 3: raise Exception('min degree') #perhaps pass this outside for k<3 checking
 
 	depth_first_index = dict(map((lambda (x,y): (y,x)), enumerate(positions)))
 	nx.set_node_attributes(G2,'dfi',depth_first_index)
@@ -77,13 +77,17 @@ def chain_decomposition(G, checker):
 		num += 1
 		for u in G.successors(x):
 			chain = [x]
-			while not 'chain' in G[chain[-1]][u]:
+			while u!=None and not 'chain' in G[chain[-1]][u]:
 				chain.append(u)
 				u = G.node[u]['parent']
-
+			
 			if len(chain)>1:
 				G.add_path(chain, chain = chain_number)
-				start, first_node, last_node, parent = chain[0], chain[1], chain[-1], G[chain[-1]][u]['chain']
+				start = chain[0]
+				first_node = chain[1]
+				last_node = chain[-1]
+				parent = G[chain[-1]][u]['chain'] if u!=None else 0
+				#chain[0], chain[1], chain[-1], G[chain[-1]][u]['chain']
 				chains.append(Chain(
 						G,
 						start,
@@ -94,8 +98,6 @@ def chain_decomposition(G, checker):
 						chains,
 						checker))
 				chain_number = chain_number + 1
-
-	check_chain_decomposition(G, chains)
 
 	return G, chains
 
