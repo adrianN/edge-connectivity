@@ -38,10 +38,11 @@ class Checker:
 
 		def smoothe(u):
 			assert self.rebuild.degree(u)==2
-			a,b = self.rebuild.neighbors(u)
-
-			print 'smoothe',a,u,b
-
+			try:
+				a,b = self.rebuild.neighbors(u)
+			except ValueError:
+				#double edge
+				a = b = self.rebuild.neighbors(u)[0]
 			self.rebuild.remove_node(u)
 			self.rebuild.add_edge(a,b)
 
@@ -57,19 +58,18 @@ class Checker:
 			assert u in self.rebuild
 			assert v in self.rebuild
 			for x in p[1:-1]:
-				if x in self.rebuild: raise Exception('contains existing inner')
-			print 'u', self.rebuild.degree(u), 'v', self.rebuild.degree(v)
+				if x in self.rebuild: 
+					print x,'in the graph'
+					raise Exception('contains existing inner')
+
+			print 'u', u, self.rebuild.degree(u), 'v', v, self.rebuild.degree(v)
 			if u==v:
 				print 'loop'
-				if not self.rebuild.degree(u)>=5: raise Exception("loop at nonreal")
-				continue
+				if not self.rebuild.degree(u)>=5: 
+					raise Exception("loop at nonreal")
 
 			if not self.rebuild.has_edge(u,v): 
 				print u,v
-				nx.set_node_attributes(self.rebuild, 'dfi', dict.fromkeys(self.rebuild.nodes()))
-				nx.set_edge_attributes(self.rebuild, 'chain', dict.fromkeys(self.rebuild.edges()))
-				nx.set_edge_attributes(self.rebuild, 'type', dict.fromkeys(self.rebuild.edges()))
-				print to_dot(self.rebuild)
 				raise Exception("no edge ")
 			
 			if self.rebuild.degree(u) == self.rebuild.degree(v) == 2:
