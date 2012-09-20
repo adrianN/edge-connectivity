@@ -1,6 +1,7 @@
 import networkx as nx
 from tests import *
 from chain import *
+from conn_exceptions import ConnEx
 
 def dfs(G,source=None):
 	"""Produce edges in a depth-first-search starting at source."""
@@ -51,7 +52,10 @@ def direct_and_tag(G, source = None):
 			if not x in seen:
 				seen.add(x)
 				positions.append(x)
-				if not G.degree(x) >= 3: raise Exception('min degree') #perhaps pass this outside for k<3 checking
+				if not G.degree(x) >= 3: raise ConnEx('min degree') #perhaps pass this outside for k<3 checking
+
+	if len(seen)!=len(G):
+		raise ConnEx('disconnected')
 
 	depth_first_index = dict(map((lambda (x,y): (y,x)), enumerate(positions)))
 	nx.set_node_attributes(G2,'dfi',depth_first_index)
@@ -87,7 +91,6 @@ def chain_decomposition(G, checker):
 				first_node = chain[1]
 				last_node = chain[-1]
 				parent = G[chain[-1]][u]['chain'] if u!=None else 0
-				#chain[0], chain[1], chain[-1], G[chain[-1]][u]['chain']
 				chains.append(Chain(
 						G,
 						start,
