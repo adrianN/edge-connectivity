@@ -5,10 +5,10 @@ random.seed(42)
 
 def split_edge(G,e):
 	n = len(G)
+	while n in G: n += 1
 	assert G.has_edge(*e)
 	G.remove_edge(*e)
 	G.add_path([e[0], n, e[1]])
-	assert len(G) == n+1
 	return n
 
 def random_3_edge_connected(n):
@@ -50,9 +50,10 @@ def make_simple(G):
 		nodes = G.nodes()[:]
 		for n in nodes:
 			neighbors = sorted(map(lambda x: x[1], G.edges(n)))
+			print 'neighbors', n, neighbors,
 			p = None
 			repetitions = 0
-			for u in neighbors:
+			for u in neighbors+[-1]:
 				if u!=p:
 					if repetitions >=1:
 						yield n,p,repetitions+1
@@ -60,11 +61,15 @@ def make_simple(G):
 					repetitions = 0
 				else:
 					repetitions += 1
+			print repetitions
+
 
 	for e in G.selfloop_edges():
+		print 'self loop', e
 		G.remove_edge(*e)
 	
 	for (u,v,m) in multi_edge_iter(G):
+		print 'multi', u,v,m
 		path = []
 		for i in range(max(2,m-1)):
 			path.append(split_edge(G,(u,v)))
