@@ -2,6 +2,8 @@ import networkx as nx
 import random_graph as rg
 from chain_decomposition import *
 from tests import *
+from conn_exceptions import *
+import traceback as tb
 
 def toStr(G):
 	attr = nx.get_edge_attributes(G,'type')
@@ -32,9 +34,9 @@ class Checker:
 	def verify(self):
 		#TODO proper isomorphism check
 		if not len(self.orig) == len(self.rebuild): 
-			raise Exception("different number of nodes")
+			raise CertEx("different number of nodes")
 		if not len(self.orig.edges()) == len(self.rebuild.edges()): 
-			raise Exception("different number of edges")
+			raise CertEx("different number of edges")
 
 		def smoothe(u):
 			assert self.rebuild.degree(u)==2
@@ -59,25 +61,25 @@ class Checker:
 			for x in p[1:-1]:
 				if x in self.rebuild: 
 					print x,'in the graph'
-					raise Exception('contains existing inner')
+					raise CertEx('contains existing inner')
 
 			if u==v:
 				if not self.rebuild.degree(u)>=5: 
-					raise Exception("loop at nonreal")
+					raise CertEx("loop at nonreal")
 
 			if not self.rebuild.has_edge(u,v): 
 				print u,v
-				raise Exception("no edge ")
+				raise CertEx("no edge ")
 			
 			if self.rebuild.degree(u) == self.rebuild.degree(v) == 2:
-				raise Exception('divides same edge twice')
+				raise CertEx('divides same edge twice')
 			
 			remove_and_smoothe(u,v)
 			
 
 		if len(self.rebuild)!=2 or len(self.rebuild.edges())!=3:
 			print len(G), len(G.edges())
-			raise Exception("graph not a k23 at the end")
+			raise CertEx("graph not a k23 at the end")
 		return True
 		
 def make_segment(chain):
@@ -103,7 +105,7 @@ def add_chains(G, chains, checker):
 		added = 0
 		added_something = True
 		while added != len(segments):
-			if not added_something: raise Exception("can't add all segments, "+str(added)+ " " + str(len(segments)))
+			if not added_something: raise ConnEx("can't add all segments, "+str(added)+ " " + str(len(segments)))
 			added_something = False
 			for s in segments:
 				head = s.head
@@ -153,21 +155,36 @@ def add_chains(G, chains, checker):
 
 def check_connectivity(G):
 	checker = Checker(G)
-	#try:
-	G, chains = chain_decomposition(G, checker)
-	check_chain_decomposition(G,chains) # optional
-	add_chains(G, chains, checker)
-	#except Exception as e:
-	#	print e
-	#	return False
-	if not checker.verify():
-		raise Exception('certificate invalid')
+	try:
+		G, chains = chain_decomposition(G, checker)
+		check_chain_decomposition(G,chains) # optional
+		add_chains(G, chains, checker)
+	except ConnEx as e:
+		print type(e), e
+		return False
+	checker.verify()
+
 	return True
 
+# for i in range(1000):
+# 	print "===============",i,"==============="
+# 	G = rg.make_simple(rg.random_3_edge_connected(10))
+
+# 	assert naive_connectivity(G) ==  check_connectivity(G)
+
+
+p = 0.04
 for i in range(1000):
 	print "===============",i,"==============="
-	G = rg.make_simple(rg.random_3_edge_connected(10))
-
-	assert check_connectivity(G)
-
-	assert naive_connectivity(G)
+	n = 20
+	G = nx.fast_gnp_random_graph(n,p)
+	print p, p*n*(n-1)/2
+	try:
+		if check_connectivity(G):
+			p *= 0.99
+			assert naive_connectivity(G)
+		else:
+			p *= 1.01
+			assert not naive_connectivity(G)
+	except:
+		print nx.generate_adjlist(G)
