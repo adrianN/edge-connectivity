@@ -4,6 +4,7 @@ from chain_decomposition import *
 from tests import *
 from conn_exceptions import *
 import traceback as tb
+from intervall_ordering import order_segments
 
 def toStr(G):
 	attr = nx.get_edge_attributes(G,'type')
@@ -20,6 +21,9 @@ class Segment:
 		self.starters = []
 		self.attachment_points = [chain.start, chain.end]
 		chain.segment = self
+
+	def __str__(self):
+		return str(self.attachment_points)
 
 class Checker:
 	def __init__(self, G):
@@ -102,21 +106,19 @@ def make_segment(chain):
 
 def add_chains(G, chains, checker):
 	def order_and_add(segments):
-		#todo linear time
-		added = 0
-		added_something = True
-		while added != len(segments):
-			if not added_something: raise ConnEx("can't add all segments, "+str(added)+ " " + str(len(segments)))
-			added_something = False
-			for s in segments:
-				head = s.head
-				assert head.type == 1
-				if is_addable(head):
-					head.add()
-					map(add_type3,s.starters)
-					added_something = True
-					added += 1
-	
+		if segments == []: return
+		print '\nordering segments', map(str,segments)
+		order = order_segments(G, segments)
+		print 'i got the following order', map(str,order), 'and need', map(str,(segments))
+		assert len(order) == len(segments)
+		for segment in order:
+			print 'adding segment', segment
+			for chain in segment.starters:
+				assert not chain.is_added, "chain "+str(chain)+" is already added"
+				add_type3(chain)
+			if not segment.head.is_added:
+				segment.head.add()
+			
 	def add_type3(chain):
 			assert not chain.is_added
 			assert chain.type == 3
