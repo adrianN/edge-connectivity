@@ -1,3 +1,15 @@
+class ComparableMixin:
+  def __eq__(self, other):
+    return not self<other and not other<self
+  def __ne__(self, other):
+    return not self == other
+  def __gt__(self, other):
+    return other<self
+  def __ge__(self, other):
+    return not self<other
+  def __le__(self, other):
+    return not other<self
+
 def tree_path_edges(G,u,v):
 	p = u
 	while p!=v:

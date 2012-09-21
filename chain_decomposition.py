@@ -52,7 +52,7 @@ def direct_and_tag(G, source = None):
 			if not x in seen:
 				seen.add(x)
 				positions.append(x)
-				if not G.degree(x) >= 3: raise ConnEx('min degree') #perhaps pass this outside for k<3 checking
+				if not G.degree(x) >= 3: raise ConnEx('min degree',G.edges(x)) #perhaps pass this outside for k<3 checking
 
 	if len(seen)!=len(G):
 		raise ConnEx('disconnected')

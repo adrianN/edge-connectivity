@@ -102,6 +102,7 @@ def make_segment(chain):
 
 def add_chains(G, chains, checker):
 	def order_and_add(segments):
+		#todo linear time
 		added = 0
 		added_something = True
 		while added != len(segments):
@@ -113,8 +114,6 @@ def add_chains(G, chains, checker):
 				if is_addable(head):
 					head.add()
 					map(add_type3,s.starters)
-					for v in s.attachment_points:
-						assert G.node[v]['real']
 					added_something = True
 					added += 1
 	
@@ -133,6 +132,10 @@ def add_chains(G, chains, checker):
 	for chain in chains:
 		assert chain.is_added, "Chain " + str(chain) + " is not yet added"
 
+		#all type 2 chains can be added, since chain.start is real
+		for child in chain.children[1]:
+			if not child.is_added: child.add()
+
 		segments = []
 		for c in chain.children[0]:
 			segments.append(Segment(c))
@@ -143,15 +146,8 @@ def add_chains(G, chains, checker):
 			if not segment:
 				add_type3(c)
 
-
-				#all type 2 chains can be added, since chain.start is real
-		for child in chain.children[1]:
-			if not child.is_added: child.add()
-
 		order_and_add(segments)
 
-		for c in chain.children[0] + chain.children[1] + chain.type3:
-			assert c.is_added, "didn't add " +str(c)
 
 def check_connectivity(G):
 	checker = Checker(G)
@@ -160,17 +156,17 @@ def check_connectivity(G):
 		check_chain_decomposition(G,chains) # optional
 		add_chains(G, chains, checker)
 	except ConnEx as e:
-		print type(e), e
+		print type(e), e.args
 		return False
 	checker.verify()
 
 	return True
 
-# for i in range(1000):
-# 	print "===============",i,"==============="
-# 	G = rg.make_simple(rg.random_3_edge_connected(10))
+for i in range(1000):
+	print "===============",i,"==============="
+	G = rg.make_simple(rg.random_3_edge_connected(10))
 
-# 	assert naive_connectivity(G) ==  check_connectivity(G)
+	assert naive_connectivity(G) ==  check_connectivity(G)
 
 
 p = 0.04
@@ -187,4 +183,4 @@ for i in range(1000):
 			p *= 1.01
 			assert not naive_connectivity(G)
 	except:
-		print nx.generate_adjlist(G)
+		print list(nx.generate_adjlist(G))
