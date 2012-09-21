@@ -107,12 +107,9 @@ def make_segment(chain):
 def add_chains(G, chains, checker):
 	def order_and_add(segments):
 		if segments == []: return
-		print '\nordering segments', map(str,segments)
 		order = order_segments(G, segments)
-		print 'i got the following order', map(str,order), 'and need', map(str,(segments))
 		assert len(order) == len(segments)
 		for segment in order:
-			print 'adding segment', segment
 			for chain in segment.starters:
 				assert not chain.is_added, "chain "+str(chain)+" is already added"
 				add_type3(chain)

@@ -15,56 +15,60 @@ class Interval:
 def order_intervals(intervals, start, target):
 	G = nx.Graph()
 	for i in intervals:
-		G.add_node(i)
+		G.add_node(i.data)
 
 	def add_edge(i1, i2):
 		G.add_edge(i1.data, i2.data)
 
 	#right to left sweep according to left endpoints
 	#linear time with proper sorting
-	print 'right to left sweep', map(str,sorted(intervals, reverse = True, key = lambda i: (i.endpoints[0], -i.endpoints[1])))
+
 	stack = []
 	for i in sorted(intervals, reverse = True, key = lambda i: (i.endpoints[0], -i.endpoints[1])):
 		special_connect = False
 		l, r = i.endpoints
-		print 'considering', i, 'stack', map(str,stack)
+
 		while stack and r>stack[-1].endpoints[1]:
 			i2 = stack.pop()
+			#Since now the intervals don't pierce each other anymore,
+			#we need to add this special edge
 			if not special_connect and i2.endpoints[0] == l:
 				special_connect = True
 				add_edge(i,i2)
-				print 'special connect', i, i2
-			print i2
+
+
 		if stack and r>= stack[-1].endpoints[0]:
 			add_edge(i,stack[-1])
-			print '\tconnect', i, stack[-1]
+
 		stack.append(i)
 
 	#left to right sweep according to right endpoints
-	print 'left to right sweep', map(str,sorted(intervals, key = lambda i: (i.endpoints[1], -i.endpoints[0])))
+
 	stack = []
 	for i in sorted(intervals, key = lambda i: (i.endpoints[1], -i.endpoints[0])):
 		l, r = i.endpoints
 		special_connect = False
-		print 'considering', i, 'stack', map(str,stack)
+
 		while stack and l<stack[-1].endpoints[0]:
 			i2 = stack.pop()
 			if not special_connect and i2.endpoints[1] == r:
 				special_connect = True
 				add_edge(i,i2)
-				print 'special connect', i, i2
-			print i2
+
+
 		if stack and l<= stack[-1].endpoints[1]:
 			add_edge(i,stack[-1])
-			print '\tconnect', i, stack[-1]
+
 		stack.append(i)
 
 	order = list(nx.dfs_preorder_nodes(G,start))
-	print 'G:'
-	print '\n'.join(map(lambda x:str(map(str,x)),G.edges()))
-	print 'connected?', nx.is_connected(G)
-	print 'order found', map(str, order)
 
+
+
+
+	if not len(order) == len(G):
+		#todo separation pair
+		raise ConnEx("can't add all intervals")
 	return order
 
 def order_segments(G, segments):
@@ -79,17 +83,17 @@ def order_segments(G, segments):
 	real_nodes = [x for x in path if G.node[x]['real']]	
 	positions = dict((x,i) for (i,x) in enumerate(path))
 	pos = lambda x: positions[x]
-	print map(pos,mins), map(pos,maxes), pos(highest), pos(lowest), 'path', map(pos,path), map(pos,real_nodes)
-	print mins, maxes, highest, lowest, 'path', path, real_nodes
+
+
 
 	assert -1 not in path
 	real_intervals = [Interval(-1,pos(x),'real_node') for x in real_nodes]
 
 	segment_intervals = []
 	for s in segments:
-		print s,
+
 		a = sorted([pos(x) for x in s.attachment_points])
-		print a
+
 		for x in a[1:]:
 			segment_intervals.append(Interval(a[0],x,s))
 		for x in a[1:-1]:
