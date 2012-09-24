@@ -17,6 +17,7 @@ class Chain:
 		if type == 3:
 			c = inner_node_of(self.graph, start)
 			if c==len(chains):
+				print G[start][G.node[start]['parent']]
 				raise ConnEx('cut edge',(start,G.node[start]['parent']))
 			chain = chains[c]
 			chain.add_type3(self)

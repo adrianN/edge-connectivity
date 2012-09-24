@@ -63,7 +63,6 @@ def glue_graphs(G,G2,k):
 	for i in range(len(v)):
 		newG.add_edge(d[0][v[i]], d[1][v2[i]])
 		print (d[0][v[i]], d[1][v2[i]]),
-	print
 	return newG
 
 def not_3_conn(n):

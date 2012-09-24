@@ -166,13 +166,14 @@ for i in range(1000):
 	print "===============",i,"==============="
 	G = rg.not_3_conn(100)
 	G = rg.make_simple(G)
-	assert naive_connectivity(G) ==  check_connectivity(G)
+	assert not check_connectivity(G)
 
-for i in range(300):
+
+for i in range(1000):
 	print "===============",i,"==============="
-	G = rg.make_simple(rg.random_3_edge_connected(10))
+	G = rg.make_simple(rg.random_3_edge_connected(100))
 
-	assert naive_connectivity(G) ==  check_connectivity(G)
+	assert check_connectivity(G)
 
 
 p = 0.04

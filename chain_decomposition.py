@@ -4,7 +4,8 @@ from chain import *
 from conn_exceptions import ConnEx
 
 def dfs(G,source=None):
-	"""Produce edges in a depth-first-search starting at source."""
+	"""Produce edges in a depth-first-search starting at source. 
+	Edges are tagged as either 'tree' or 'back'"""
 	# Very slight modification of the DFS procedure from networkx
 	if source is None:
 		# produce edges for all components
@@ -30,9 +31,6 @@ def dfs(G,source=None):
 					yield parent,child,'back'
 			except StopIteration:
 				stack.pop()
-	if len(visited)!=len(G):
-		print 'dfs determines this to be disconnected'
-		print nx.is_connected(G)
 
 
 def direct_and_tag(G, source = None):
@@ -55,7 +53,7 @@ def direct_and_tag(G, source = None):
 			if not x in seen:
 				seen.add(x)
 				positions.append(x)
-				if not G.degree(x) >= 3: raise ConnEx('min degree',G.edges(x)) #perhaps pass this outside for k<3 checking
+				if not G.degree(x) >= 3: raise ConnEx('min degree',G.edges(x)) 
 
 	if len(seen)!=len(G):
 		raise ConnEx('disconnected')
@@ -83,6 +81,9 @@ def chain_decomposition(G, checker):
 		assert G.node[x]['dfi'] == num
 		num += 1
 		for u in G.successors(x):
+			if not G[x][u]['type'] == 'back':
+				continue
+
 			chain = [x]
 			while u!=None and not 'chain' in G[chain[-1]][u]:
 				chain.append(u)
@@ -104,6 +105,9 @@ def chain_decomposition(G, checker):
 						chains,
 						checker))
 				chain_number = chain_number + 1
+
+	for (u,v) in G.edges():
+		assert 'chain' in G[u][v], "this should be handled in the chain constructor"
 
 	return G, chains
 
