@@ -1,4 +1,5 @@
 from helper import *
+from conn_exceptions import ConnEx
 
 class Chain:
 	def __init__(self, G, start, first_node, end, parent, type, chains, checker):
@@ -14,7 +15,10 @@ class Chain:
 		self.checker = checker
 		if parent != None: self.parent.add_child(self)
 		if type == 3:
-			chain = chains[inner_node_of(self.graph, start)]
+			c = inner_node_of(self.graph, start)
+			if c==len(chains):
+				raise ConnEx('cut edge',(start,G.node[start]['parent']))
+			chain = chains[c]
 			chain.add_type3(self)
 
 	def num(self):

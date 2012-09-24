@@ -25,6 +25,9 @@ def check_chain_decomposition(G, chains):
 			assert G[u][v]['chain'] == i, str(chain) + '\n' + str(G[u][v]) + '\n' + str(i)
 
 def naive_connectivity(G):
+	if not nx.is_connected(G):
+		print 'not connected!'
+		return False
 	for e in G.edges():
 		for e2 in G.edges():
 			G.remove_edge(*e)
@@ -32,6 +35,8 @@ def naive_connectivity(G):
 				G.remove_edge(*e2)
 			if not nx.is_connected(G):
 				print e,e2,'disconnect the graph'
+				G.add_edge(*e)
+				if not e==e2: G.add_edge(*e2)
 				return False
 			G.add_edge(*e)
 			if not e==e2: G.add_edge(*e2)

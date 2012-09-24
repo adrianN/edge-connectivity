@@ -155,13 +155,20 @@ def check_connectivity(G):
 		check_chain_decomposition(G,chains) # optional
 		add_chains(G, chains, checker)
 	except ConnEx as e:
-		print type(e), e.args
-		return False
+	 	print type(e), e.args
+	 	return False
 	checker.verify()
 
 	return True
 
-for i in range(1000):
+
+for i in range(300):
+	print "===============",i,"==============="
+	G = rg.not_3_conn(30)
+	G = rg.make_simple(G)
+	assert naive_connectivity(G) ==  check_connectivity(G)
+
+for i in range(300):
 	print "===============",i,"==============="
 	G = rg.make_simple(rg.random_3_edge_connected(10))
 
@@ -169,7 +176,7 @@ for i in range(1000):
 
 
 p = 0.04
-for i in range(1000):
+for i in range(300):
 	print "===============",i,"==============="
 	n = 20
 	G = nx.fast_gnp_random_graph(n,p)

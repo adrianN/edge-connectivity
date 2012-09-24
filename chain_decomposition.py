@@ -30,6 +30,9 @@ def dfs(G,source=None):
 					yield parent,child,'back'
 			except StopIteration:
 				stack.pop()
+	if len(visited)!=len(G):
+		print 'dfs determines this to be disconnected'
+		print nx.is_connected(G)
 
 
 def direct_and_tag(G, source = None):
@@ -125,11 +128,12 @@ def find_k23(G, source, checker):
 	succ = G.successors(source)
 	cycle = set()
 	cycle.add(source)
-
+	cycle_list = []
 	#find a basic cycle
 	s = succ[0]
 	while s!=source:
 		cycle.add(s)
+		cycle_list.append(s)
 		s = G.node[s]['parent']
 
 	#find a second chain
@@ -140,7 +144,8 @@ def find_k23(G, source, checker):
 		if not t == source:
 			break
 
-	assert not t == source, "Graph is not 3-edge connected"
+	if t==source:
+		raise ConnEx("no k23", (source,cycle_list[0]), (source,cycle_list[-1]))
 
 	# source, succ[0], s, t define a k23
 	#mark the initial three chains

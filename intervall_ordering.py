@@ -1,6 +1,6 @@
 import networkx as nx
 from conn_exceptions import ConnEx
-from helper import tree_path_nodes
+from helper import tree_path_nodes, inner_node_of
 
 class Interval:
 	def __init__(self, left, right, data):
@@ -12,6 +12,8 @@ class Interval:
 		return ','.join([str(self.endpoints), str(self.data)])
 		return str(self.endpoints)
 
+class IntervalException(Exception): pass
+
 def order_intervals(intervals, start, target):
 	G = nx.Graph()
 	for i in intervals:
@@ -22,7 +24,6 @@ def order_intervals(intervals, start, target):
 
 	#right to left sweep according to left endpoints
 	#linear time with proper sorting
-
 	stack = []
 	for i in sorted(intervals, reverse = True, key = lambda i: (i.endpoints[0], -i.endpoints[1])):
 		special_connect = False
@@ -36,14 +37,12 @@ def order_intervals(intervals, start, target):
 				special_connect = True
 				add_edge(i,i2)
 
-
 		if stack and r>= stack[-1].endpoints[0]:
 			add_edge(i,stack[-1])
 
 		stack.append(i)
 
 	#left to right sweep according to right endpoints
-
 	stack = []
 	for i in sorted(intervals, key = lambda i: (i.endpoints[1], -i.endpoints[0])):
 		l, r = i.endpoints
@@ -55,7 +54,6 @@ def order_intervals(intervals, start, target):
 				special_connect = True
 				add_edge(i,i2)
 
-
 		if stack and l<= stack[-1].endpoints[1]:
 			add_edge(i,stack[-1])
 
@@ -63,28 +61,44 @@ def order_intervals(intervals, start, target):
 
 	order = list(nx.dfs_preorder_nodes(G,start))
 
-
-
-
 	if not len(order) == len(G):
-		#todo separation pair
-		raise ConnEx("can't add all intervals")
+		seen = set(order)
+		for v in G:
+			if v in seen: continue
+			raise IntervalException(list(nx.dfs_preorder_nodes(G,v)))
 	return order
 
 def order_segments(G, segments):
 	def dfi(x):
 		return G.node[x]['dfi']
-	mins = [min(s.attachment_points, key = dfi) for s in segments]
-	maxes = [max(s.attachment_points, key = dfi) for s in segments]
-	highest = min(mins, key=dfi)
-	lowest = max(maxes, key=dfi)
+
+	def cut_edges(highest, lowest):
+		edge1 = (highest, G.node[highest]['parent'])
+		assert nx.is_directed(G)
+		c = inner_node_of(G,lowest)
+		l = [v for v in G.predecessors(lowest) if G[v][lowest]['chain'] == c]
+		assert len(l) == 1
+		edge2 = (lowest, l[0])
+		return edge1, edge2
+
+	def extrema(segments):
+		mins = [min(s.attachment_points, key = dfi) for s in segments]
+		maxes = [max(s.attachment_points, key = dfi) for s in segments]
+		highest = min(mins, key=dfi)
+		lowest = max(maxes, key=dfi)
+		return highest, lowest
+
+	highest, lowest = extrema(segments)
 
 	path = list(tree_path_nodes(G,lowest,highest))
 	real_nodes = [x for x in path if G.node[x]['real']]	
+
+	if not real_nodes:
+		raise ConnEx('can\'t add all intervals, because there are no real nodes', 
+			cut_edges(highest,lowest))
+
 	positions = dict((x,i) for (i,x) in enumerate(path))
 	pos = lambda x: positions[x]
-
-
 
 	assert -1 not in path
 	real_intervals = [Interval(-1,pos(x),'real_node') for x in real_nodes]
@@ -99,7 +113,13 @@ def order_segments(G, segments):
 		for x in a[1:-1]:
 			segment_intervals.append(Interval(x,a[-1],s))
 
-	ordered_int = order_intervals(real_intervals+segment_intervals, 'real_node', len(segments))
+	try:
+		ordered_int = order_intervals(
+			real_intervals+segment_intervals, 'real_node', len(segments))
+	except IntervalException as l:
+		raise ConnEx("can't add all intervals",
+			cut_edges(*extrema(l.args[0])))
+
 	# seen = set()
 	# ordered_segments = []
 	# for interval in ordered_int:

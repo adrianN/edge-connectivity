@@ -43,23 +43,48 @@ def random_3_edge_connected(n):
 
 	return G
 
+def glue_graphs(G,G2,k):
+	"""Connect two graphs by k edges, return a new graph"""
+	v = [random.choice(G.nodes()) for i in range(k)]
+	v2 = [random.choice(G2.nodes()) for i in range(k)]
+	newG = nx.MultiGraph()
+	d = [dict(),dict()]
+	for i,x in enumerate(G.nodes()):
+		d[0][x] = i
+	for i,x in enumerate(G2.nodes()):
+		d[1][x] = i+len(G)
+
+	for (x,y) in G.edges():
+		newG.add_edge(d[0][x], d[0][y])
+	for (x,y) in G2.edges():
+		newG.add_edge(d[1][x], d[1][y])
+
+	print 'cut',
+	for i in range(len(v)):
+		newG.add_edge(d[0][v[i]], d[1][v2[i]])
+		print (d[0][v[i]], d[1][v2[i]]),
+	print
+	return newG
+
+def not_3_conn(n):
+	"""Returns a graph with roughly n nodes containing two subgraphs that can be separated by up to two edges"""
+	G = random_3_edge_connected(max(4,n/2))
+	G2 = random_3_edge_connected(max(4,n-len(G)))
+	k = random.choice([1,2])
+	print 'this graph is',k,'connected'
+	nG = glue_graphs(G,G2,k)
+	assert nx.is_connected(nG)
+	return nG
+
 def make_simple(G):
 	""" Makes a MultiGraph simple while preserving edge connectivity """
 	def multi_edge_iter(G):
 		"""Iterator over all multpile edges in the Graph. Yields (u,v,multiplicity)"""
 		nodes = G.nodes()[:]
 		for n in nodes:
-			neighbors = sorted(map(lambda x: x[1], G.edges(n)))
-			p = None
-			repetitions = 0
-			for u in neighbors+[-1]:
-				if u!=p:
-					if repetitions >=1:
-						yield n,p,repetitions+1
-					p = u
-					repetitions = 0
-				else:
-					repetitions += 1
+			for u in G.neighbors(n):
+				if G.number_of_edges(n,u) > 1:
+					yield (n,u,G.number_of_edges(n,u))
 
 
 	for e in G.selfloop_edges():
