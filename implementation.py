@@ -162,9 +162,9 @@ def check_connectivity(G):
 	return True
 
 
-for i in range(300):
+for i in range(1000):
 	print "===============",i,"==============="
-	G = rg.not_3_conn(30)
+	G = rg.not_3_conn(100)
 	G = rg.make_simple(G)
 	assert naive_connectivity(G) ==  check_connectivity(G)
 
