@@ -2,6 +2,7 @@ from helper import *
 from conn_exceptions import ConnEx
 
 class Chain:
+	""" A chain C. Stores s(C), t(C), the first edge, p(C), type(C) """
 	def __init__(self, G, start, first_node, end, parent, type, chains, checker):
 		self.start = start
 		self.first_node = first_node
@@ -22,6 +23,7 @@ class Chain:
 			chain = chains[c]
 			chain.add_type3(self)
 
+
 	def num(self):
 		return self.graph[self.start][self.first_node]['chain']
 
@@ -32,9 +34,8 @@ class Chain:
 		self.children[chain.type - 1].append(chain)
 
 	def add(self):
-		"""Assert that a chain can be added and if yes, do so"""
-		assert is_addable(self), "Can't add " + str(self)
-		
+		#print 'adding chain', self.num(),list(self.nodes())
+		#assert is_addable(self)
 		self.is_added = True
 		self.graph.node[self.start]['real'] = True
 		self.graph.node[self.end]['real'] = True
@@ -53,9 +54,14 @@ class Chain:
 			yield e
 
 	def nodes(self):
-		for u,v in self.edges():
-			yield u
-		yield v
+		G = self.graph
+		yield self.start
+		next = self.first_node
+		last = self.end
+		while next != last:
+			yield next
+			next = G.node[next]['parent']
+		yield last 
 
 	def __str__(self):
 		return str((
@@ -67,6 +73,7 @@ class Chain:
 			"parent", self.parent.num() if self.parent else None))
 
 def is_addable(chain):
+	"""Brute force check that a chain is addable. Do not use if you like linear time"""
 	if chain.num() == 0: return True
 	if chain.is_added: return False
 

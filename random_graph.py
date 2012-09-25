@@ -59,10 +59,10 @@ def glue_graphs(G,G2,k):
 	for (x,y) in G2.edges():
 		newG.add_edge(d[1][x], d[1][y])
 
-	print 'cut',
+#	print 'cut',
 	for i in range(len(v)):
 		newG.add_edge(d[0][v[i]], d[1][v2[i]])
-		print (d[0][v[i]], d[1][v2[i]]),
+#		print (d[0][v[i]], d[1][v2[i]]),
 	return newG
 
 def not_3_conn(n):
@@ -70,7 +70,7 @@ def not_3_conn(n):
 	G = random_3_edge_connected(max(4,n/2))
 	G2 = random_3_edge_connected(max(4,n-len(G)))
 	k = random.choice([1,2])
-	print 'this graph is',k,'connected'
+	#print 'this graph is',k,'connected'
 	nG = glue_graphs(G,G2,k)
 	assert nx.is_connected(nG)
 	return nG
@@ -79,7 +79,7 @@ def make_simple(G):
 	""" Makes a MultiGraph simple while preserving edge connectivity """
 	def multi_edge_iter(G):
 		"""Iterator over all multpile edges in the Graph. Yields (u,v,multiplicity)"""
-		nodes = G.nodes()[:]
+		nodes = G.nodes()
 		for n in nodes:
 			for u in G.neighbors(n):
 				if G.number_of_edges(n,u) > 1:
@@ -91,10 +91,10 @@ def make_simple(G):
 	
 	for (u,v,m) in multi_edge_iter(G):
 		path = []
-		for i in range(max(2,m-1)):
+		for i in xrange(max(2,m-1)):
 			path.append(split_edge(G,(u,v)))
 		G.add_path(path)
 
 	simple = nx.Graph()
-	simple.add_edges_from(G.edges())
+	simple.add_edges_from(G.edges_iter())
 	return simple
