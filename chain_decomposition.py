@@ -44,24 +44,29 @@ def direct_and_tag(G, source = None):
 	positions = []
 	seen = set()
 	parent = dict.fromkeys(G2.nodes_iter())
+	degrees = dict.fromkeys(G2.nodes_iter(),0)
 	for (u,v,d) in dfs(G, source):
 		if d=='tree':
-			G2.add_edge(v,u, type=d) #tree edges go up
+			G2.add_edge(v,u, {'type':d}) #tree edges go up
 			parent[v] = u
 		else:
 			if not G2.has_edge(u,v): #we also see the edge to the parent here
-				G2.add_edge(v,u, type=d) #back edges go down
+				G2.add_edge(v,u, {'type':d}) #back edges go down
 				
-		for x in (u,v): #compute the dfs order, check min degree
+		for x in (u,v): #compute the dfs order
+			degrees[x] += 1
 			if not x in seen:
 				seen.add(x)
 				positions.append(x)
-				if G.degree(x) < 3: raise ConnEx('min degree',G.edges(x)) 
 
 	if len(seen)!=len(G):
 		raise ConnEx('disconnected')
 
-	depth_first_index = dict(map((lambda (x,y): (y,x)), enumerate(positions)))
+	for (x,d) in degrees.iteritems():
+		d = d//2
+		if d<3: raise ConnEx('min degree', G.edges(x))
+
+	depth_first_index = dict(((x,y) for (y,x) in enumerate(positions)))
 	nx.set_node_attributes(G2,'dfi', depth_first_index)
 	nx.set_node_attributes(G2,'parent', parent)
 	nx.set_node_attributes(G2,'real', dict.fromkeys(G2.nodes_iter(), False))
@@ -83,7 +88,8 @@ def chain_decomposition(G, checker):
 		num += 1
 		#sorting is unnecessary for correctness, but makes things slightly faster
 		#since shorter chains are easier to be added (less intervals...)
-		for u in sorted(G.successors(x), key=lambda v:G.node[v]['dfi'], reverse=False):
+		#for u in sorted(G.successors(x), key=lambda v:G.node[v]['dfi'], reverse=True):
+		for u in G.successors(x):
 			if not G[x][u]['type'] == 'back': #also see the edge to the parent
 				continue
 
@@ -136,7 +142,8 @@ def chain_decomposition(G, checker):
 def find_k23(G, source, checker):
 	"""Finds the initial K23 subdivision (and the first three chains)"""
 
-	succ = sorted(G.successors(source), key = lambda x: G.node[x]['dfi'], reverse=False)
+	succ = G.successors(source) 
+	#succ = sorted(G.successors(source), key = lambda x: G.node[x]['dfi'], reverse=True)
 	cycle = set()
 	cycle.add(source)
 	cycle_list = []

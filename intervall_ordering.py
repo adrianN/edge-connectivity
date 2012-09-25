@@ -107,20 +107,18 @@ def order_segments(G, segments):
 
 	#generate intervals for real nodes and segments
 	assert -1 not in path
-	real_intervals = [Interval(-1,positions[x],'real_node') for x in real_nodes]
+	intervals = [Interval(-1,positions[x],'real_node') for x in real_nodes]
 
-	segment_intervals = []
 	for s in segments:
 		a = sorted([positions[x] for x in s.attachment_points])
 		for x in a[1:]:
-			segment_intervals.append(Interval(a[0],x,s))
+			intervals.append(Interval(a[0],x,s))
 		for x in a[1:-1]:
-			segment_intervals.append(Interval(x,a[-1],s))
+			intervals.append(Interval(x,a[-1],s))
 
 	#compute an order
 	try:
-		ordered_int = order_intervals(
-			real_intervals+segment_intervals, 'real_node')
+		ordered_int = order_intervals(intervals, 'real_node')
 	except IntervalException as l:
 		raise ConnEx("can't add all intervals",
 			cut_edges(*extrema(l.args[0])))

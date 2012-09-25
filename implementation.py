@@ -8,6 +8,7 @@ from intervall_ordering import order_segments
 from checker import Checker
 import cProfile
 import cPickle
+import statprof
 
 def toStr(G):
 	attr = nx.get_edge_attributes(G,'type')
@@ -57,6 +58,7 @@ def add_chains(G, chains, checker):
 				assert not chain.is_added, "chain "+str(chain)+" is already added"
 				add_type3(chain)
 			if not segment.head.is_added:
+				assert segment.starters == []
 				segment.head.add()
 			
 	def add_type3(chain):
@@ -105,7 +107,7 @@ def check_connectivity(G):
 	except ConnEx as e:
 	 	print type(e), e.args
 	 	return False
-	checker.verify()
+	#checker.verify()
 
 	return True
 
@@ -139,7 +141,7 @@ def prepare_yes_no(nodes, graphs):
 	print 'no'
 	n = list(no(nodes,graphs))
 	f = open('/Users/aneumann/Desktop/no.g','w')
-	cPickle.load(n,f)
+	cPickle.dump(n,f)
 	f.close()
 
 def read_yes_no():
@@ -153,8 +155,17 @@ def read_yes_no():
 
 # y,n = read_yes_no()
 # print 'down to business'
-# cProfile.run('main(y, n)')
+# #cProfile.run('main(y, n)')
 
-#prepare_yes_no(5000,50)
+# statprof.start()
+
+# try:
+# 	main(y[:10],n[:10])
+# finally:
+# 	statprof.stop()
+# 	statprof.display()
+
+
+# #prepare_yes_no(5000,50)
 
 main(yes(500,10),no(500,10))
