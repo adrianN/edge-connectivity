@@ -56,7 +56,7 @@ def direct_and_tag(G, source = None):
 			if not x in seen:
 				seen.add(x)
 				positions.append(x)
-				if not G.degree(x) >= 3: raise ConnEx('min degree',G.edges(x)) 
+				if G.degree(x) < 3: raise ConnEx('min degree',G.edges(x)) 
 
 	if len(seen)!=len(G):
 		raise ConnEx('disconnected')
@@ -93,38 +93,39 @@ def chain_decomposition(G, checker):
 				chain.append(u)
 				u = G.node[u]['parent']
 			
-			if len(chain)>1: 
-			#might just contain x if x is the root since we already added some chains
-				G.add_path(chain, chain = chain_number)
-				start = chain[0]
-				first_node = chain[1]
-				last_node = chain[-1]
-				parent = G[chain[-1]][u]['chain'] if u!=None else 0
+			if len(chain)==1:
+				assert x == source
+				#we get here when we encounter the chains of the k23
+				continue
 
-				#classify the chain
-				p = chains[parent]
-				if start == p.start or p.num()==0 and start==p.end: 
-					type = 2
-				elif inner_node_of(G,start) == p.num():
-					type = 1
-				else:
-					type = 3
+			G.add_path(chain, chain = chain_number)
+			start = chain[0]
+			first_node = chain[1]
+			last_node = chain[-1]
+			parent = G[chain[-1]][u]['chain'] if u!=None else 0
 
-				chains.append(Chain(
-						G,
-						start,
-						first_node,
-						last_node,
-						parent,
-						type,
-						chains,
-						checker))
-				chain_number = chain_number + 1
+			#classify the chain
+			p = chains[parent]
+			if start == p.start or p.num()==0 and start==p.end: 
+				type = 2
+			elif inner_node_of(G,start) == p.num():
+				type = 1
 			else:
-				assert x==source
+				type = 3
 
-	for (u,v) in G.edges_iter():
-		assert 'chain' in G[u][v], "this should be handled in the chain constructor"
+			chains.append(Chain(
+					G,
+					start,
+					first_node,
+					last_node,
+					parent,
+					type,
+					chains,
+					checker))
+			chain_number = chain_number + 1
+
+	#for (u,v) in G.edges_iter():
+	#	assert 'chain' in G[u][v], "this should be handled in the chain constructor"
 
 	return G, chains
 

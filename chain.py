@@ -18,11 +18,9 @@ class Chain:
 		if type == 3:
 			c = inner_node_of(self.graph, start)
 			if c==len(chains):
-				print G[start][G.node[start]['parent']]
 				raise ConnEx('cut edge',(start,G.node[start]['parent']))
 			chain = chains[c]
 			chain.add_type3(self)
-
 
 	def num(self):
 		return self.graph[self.start][self.first_node]['chain']
@@ -34,24 +32,10 @@ class Chain:
 		self.children[chain.type - 1].append(chain)
 
 	def add(self):
-		#print 'adding chain', self.num(),list(self.nodes())
-		#assert is_addable(self)
 		self.is_added = True
 		self.graph.node[self.start]['real'] = True
 		self.graph.node[self.end]['real'] = True
-		self.checker.add(list(self.nodes()))
-
-	def edges(self):
-		G = self.graph
-
-		start = self.start
-		next = self.first_node
-		last = self.end
-		assert G[start][next]
-
-		yield start, next
-		for e in tree_path_edges(G,next,last):
-			yield e
+		self.checker.add(self.nodes())
 
 	def nodes(self):
 		G = self.graph

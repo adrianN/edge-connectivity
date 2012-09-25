@@ -10,16 +10,20 @@ class Checker:
 		self.paths.append(path)
 
 	def verify(self):
+		""" checks that the certificate is valid """
 		rebuild = nx.MultiGraph()
-		for path in self.paths:
-			rebuild.add_path(path)
-		#TODO proper isomorphism check
-		if not len(self.orig) == len(rebuild): 
-			raise CertEx("different number of nodes")
+		for i,path in enumerate(self.paths):
+			self.paths[i] = list(path)
+			rebuild.add_path(self.paths[i])
+
+		for e in self.orig.edges_iter():
+			if not rebuild.has_edge(*e):
+				raise CertEx("graphs not isomorphic")		
 		if not len(self.orig.edges()) == len(rebuild.edges()): 
-			raise CertEx("different number of edges")
+			raise CertEx("graphs are not isomorphic")
 
 		def smoothe(u):
+			""" replaces a degree 2 node by an edge """
 			assert rebuild.degree(u)==2
 			try:
 				a,b = rebuild.neighbors(u)
@@ -30,17 +34,20 @@ class Checker:
 			rebuild.add_edge(a,b)
 
 		def remove_and_smoothe(u,v):
+			""" removes an edges, smoothes the endpoints """
 			rebuild.remove_edge(u,v)
 			for x in (u,v):
 				if rebuild.degree(x) == 2: smoothe(x)
 
+		# remove paths in reverse order. the last path is always an edge in self.rebuild
+		# hence it is easy to check whether it subdivides the same edge twice.
 		while len(self.paths)>3:
 			p = self.paths.pop()
 			u,v = p[0],p[-1]
 			assert u in rebuild
 			assert v in rebuild
 			for x in p[1:-1]:
-				if x in rebuild: 
+				if x in rebuild: # the path is not an ear
 					print x,'in the graph'
 					raise CertEx('contains existing inner')
 
@@ -53,6 +60,10 @@ class Checker:
 				raise CertEx("no edge ")
 			
 			if rebuild.degree(u) == rebuild.degree(v) == 2:
+				#if u and v subdivide the same edge they have one endpoint of the edge
+				#and either u or v as neighbor
+				#we don't check len(neighbors) since having only two neighbors is perfectly
+				#fine as long as there are multiple edges to them
 				raise CertEx('divides same edge twice')
 			
 			remove_and_smoothe(u,v)

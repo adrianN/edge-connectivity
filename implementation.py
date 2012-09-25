@@ -48,6 +48,7 @@ def make_segment(chain):
 
 def add_chains(G, chains, checker):
 	def order_and_add(segments):
+		""" Computes an order and adds segments in that order """
 		if segments == []: return
 		order = order_segments(G, segments)
 		assert len(order) == len(segments)
@@ -67,7 +68,6 @@ def add_chains(G, chains, checker):
 		while not c.is_added:
 			l.append(c)
 			c = c.parent
-		#if is_addable(l[-1]):
 		while l:
 			l.pop().add()
 
@@ -105,7 +105,7 @@ def check_connectivity(G):
 	except ConnEx as e:
 	 	print type(e), e.args
 	 	return False
-	#checker.verify()
+	checker.verify()
 
 	return True
 
@@ -119,24 +119,42 @@ def main(yes,no):
 		print i
 		assert check_connectivity(G)
 
-def no():
-	for i in xrange(10):
-		G = rg.not_3_conn(1000)
+def no(nodes, graphs):
+	for i in xrange(graphs):
+		G = rg.not_3_conn(nodes)
 		G = rg.make_simple(G)
 		yield G
 
-def yes():
-	for i in xrange(10):
-		G = rg.make_simple(rg.random_3_edge_connected(1000))
+def yes(nodes, graphs):
+	for i in xrange(graphs):
+		G = rg.make_simple(rg.random_3_edge_connected(nodes))
 		yield G
 
+def prepare_yes_no(nodes, graphs):
+	print 'yes'
+	y = list(yes(nodes,graphs))
+	f = open('/Users/aneumann/Desktop/yes.g','w')
+	cPickle.dump(y,f)
+	f.close()
+	print 'no'
+	n = list(no(nodes,graphs))
+	f = open('/Users/aneumann/Desktop/no.g','w')
+	cPickle.load(n,f)
+	f.close()
 
-f = open('/Users/aneumann/Desktop/yes.g','r')
-y = cPickle.load(f)
-f.close()
-f = open('/Users/aneumann/Desktop/no.g','r')
-n = cPickle.load(f)
-f.close()
-print 'down to business'
-cProfile.run('main(y, n)')
-#main(yes(),no())
+def read_yes_no():
+	f = open('/Users/aneumann/Desktop/yes.g','r')
+	y = cPickle.load(f)
+	f.close()
+	f = open('/Users/aneumann/Desktop/no.g','r')
+	n = cPickle.load(f)
+	f.close()
+	return y,n
+
+# y,n = read_yes_no()
+# print 'down to business'
+# cProfile.run('main(y, n)')
+
+#prepare_yes_no(5000,50)
+
+main(yes(500,10),no(500,10))
