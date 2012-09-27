@@ -40,33 +40,34 @@ def direct_and_tag(G, source = None):
 		Returns a directed graph and the nodes in dfs order.
 		Throws an exception if the minimum degree is <3."""
 	G2 = nx.DiGraph()
-	G2.add_nodes_from(G.nodes_iter())
+
 	positions = []
-	seen = set()
-	parent = dict.fromkeys(G2.nodes_iter())
-	degrees = dict.fromkeys(G2.nodes_iter(),0)
+	depth_first_index = dict()
+	parent = dict()
+	degrees = dict()
+	num_seen = 0
 	for (u,v,d) in dfs(G, source):
 		if d=='tree':
 			G2.add_edge(v,u, {'type':d}) #tree edges go up
 			parent[v] = u
-		else:
-			if not G2.has_edge(u,v): #we also see the edge to the parent here
-				G2.add_edge(v,u, {'type':d}) #back edges go down
+		elif not G2.has_edge(u,v): #we also see the edge to the parent here
+			G2.add_edge(v,u, {'type':d}) #back edges go down
 				
 		for x in (u,v): #compute the dfs order
-			degrees[x] += 1
-			if not x in seen:
-				seen.add(x)
+			if not x in depth_first_index:
+				degrees[x] = 0
+				depth_first_index[x] = num_seen
+				num_seen +=1
 				positions.append(x)
+			degrees[x] += 1
 
-	if len(seen)!=len(G):
+				
+	if num_seen!=len(G):
 		raise ConnEx('disconnected')
 
 	for (x,d) in degrees.iteritems():
-		d = d//2
-		if d<3: raise ConnEx('min degree', G.edges(x))
+		if d//2<3: raise ConnEx('min degree', G.edges(x))
 
-	depth_first_index = dict(((x,y) for (y,x) in enumerate(positions)))
 	nx.set_node_attributes(G2,'dfi', depth_first_index)
 	nx.set_node_attributes(G2,'parent', parent)
 	nx.set_node_attributes(G2,'real', dict.fromkeys(G2.nodes_iter(), False))
@@ -82,6 +83,7 @@ def chain_decomposition(G, checker):
 	G, nodes_in_dfs_order = direct_and_tag(G, source)
 
 	chains = find_k23(G, source, checker)
+
 	chain_number = 3
 	num = 0
 	for x in nodes_in_dfs_order:
@@ -90,12 +92,13 @@ def chain_decomposition(G, checker):
 		#since shorter chains are easier to be added (less intervals...)
 		#for u in sorted(G.successors(x), key=lambda v:G.node[v]['dfi'], reverse=True):
 		for u in G.successors(x):
-			if not G[x][u]['type'] == 'back': #also see the edge to the parent
+			if G[x][u]['type'] == 'tree': #also see the edge to the parent
 				continue
 
 			chain = [x]
 			#up in the graph until the next edge is in a chain or we're at the root
 			while u!=None and not 'chain' in G[chain[-1]][u]:
+				G[chain[-1]][u]['chain'] = chain_number
 				chain.append(u)
 				u = G.node[u]['parent']
 			
@@ -104,7 +107,6 @@ def chain_decomposition(G, checker):
 				#we get here when we encounter the chains of the k23
 				continue
 
-			G.add_path(chain, chain = chain_number)
 			start = chain[0]
 			first_node = chain[1]
 			last_node = chain[-1]
@@ -134,10 +136,6 @@ def chain_decomposition(G, checker):
 	#	assert 'chain' in G[u][v], "this should be handled in the chain constructor"
 
 	return G, chains
-
-
-
-
 
 def find_k23(G, source, checker):
 	"""Finds the initial K23 subdivision (and the first three chains)"""

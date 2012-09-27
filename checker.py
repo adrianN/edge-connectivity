@@ -22,23 +22,6 @@ class Checker:
 		if not len(self.orig.edges()) == len(rebuild.edges()): 
 			raise CertEx("graphs are not isomorphic")
 
-		def smoothe(u):
-			""" replaces a degree 2 node by an edge """
-			assert rebuild.degree(u)==2
-			try:
-				a,b = rebuild.neighbors(u)
-			except ValueError:
-				#double edge
-				a = b = rebuild.neighbors(u)[0]
-			rebuild.remove_node(u)
-			rebuild.add_edge(a,b)
-
-		def remove_and_smoothe(u,v):
-			""" removes an edges, smoothes the endpoints """
-			rebuild.remove_edge(u,v)
-			for x in (u,v):
-				if rebuild.degree(x) == 2: smoothe(x)
-
 		# remove paths in reverse order. the last path is always an edge in self.rebuild
 		# hence it is easy to check whether it subdivides the same edge twice.
 		while len(self.paths)>3:
@@ -66,8 +49,17 @@ class Checker:
 				#fine as long as there are multiple edges to them
 				raise CertEx('divides same edge twice')
 			
-			remove_and_smoothe(u,v)
-			
+			rebuild.remove_edge(u,v)
+			for x in (u,v):
+				if rebuild.degree(x) == 2: 
+					#replaces a degree 2 node by an edge 
+					try:
+						a,b = rebuild.neighbors(x)
+					except ValueError:
+						#double edge
+						a = b = rebuild.neighbors(x)[0]
+					rebuild.remove_node(x)
+					rebuild.add_edge(a,b)
 
 		if len(rebuild)!=2 or len(rebuild.edges())!=3:
 			print len(G), len(G.edges())

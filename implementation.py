@@ -40,6 +40,7 @@ def make_segment(chain):
 		except AttributeError:
 			chains.append(chain)
 			chain = chain.parent
+	assert all(c.type in [2,3] for c in chains)
 	if not segment: return None
 	
 	segment.attachment_points.append(source.start)
@@ -107,7 +108,7 @@ def check_connectivity(G):
 	except ConnEx as e:
 	 	print type(e), e.args
 	 	return False
-	#checker.verify()
+	checker.verify()
 
 	return True
 
@@ -153,14 +154,14 @@ def read_yes_no():
 	f.close()
 	return y,n
 
-# y,n = read_yes_no()
-# print 'down to business'
-# #cProfile.run('main(y, n)')
+y,n = read_yes_no()
+print 'down to business'
+cProfile.run('main(y, n)')
 
 # statprof.start()
 
 # try:
-# 	main(y[:10],n[:10])
+#main(y,n)
 # finally:
 # 	statprof.stop()
 # 	statprof.display()
@@ -168,4 +169,4 @@ def read_yes_no():
 
 # #prepare_yes_no(5000,50)
 
-main(yes(500,10),no(500,10))
+#main(yes(200,10),no(200,10))
