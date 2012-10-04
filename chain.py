@@ -10,26 +10,21 @@ class Chain:
 		self.parent = chains[parent] if chains else None
 		self.type = type
 		self.type3 = []
-		self.children = [[],[],[]]
+		self.children = [[],[]]
 		self.graph = G
 		self.is_added = False
 		self.checker = checker
-		if parent != None: self.parent.add_child(self)
+		if parent != None and type < 3: 
+			self.parent.children[type-1].append(self)
 		if type == 3:
 			c = inner_node_of(self.graph, start)
 			if c==len(chains):
 				raise ConnEx('cut edge',(start,G.node[start]['parent']))
 			chain = chains[c]
-			chain.add_type3(self)
+			chain.type3.append(self)
 
 	def num(self):
 		return self.graph[self.start][self.first_node]['chain']
-
-	def add_type3(self, chain):
-		self.type3.append(chain)
-
-	def add_child(self,chain):
-		self.children[chain.type - 1].append(chain)
 
 	def add(self):
 		self.is_added = True

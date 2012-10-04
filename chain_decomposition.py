@@ -3,11 +3,15 @@ from tests import *
 from chain import *
 from conn_exceptions import ConnEx
 
+def successors(G,v):
+	dfi = G.node[v]['dfi']
+	return (x for x,data in G[v].iteritems() if G.node[x]['dfi']>dfi and data['type'] == 'back')
+
 def dfs(G,source=None):
 	"""Produce edges in a depth-first-search starting at source. 
 	Edges are tagged as either 'tree' or 'back'"""
 	# Very slight modification of the DFS procedure from networkx
-	# One could unify this with direct_and_tag, but it seemed cleaner this way
+	# One could unify this with compute_information, but it seemed cleaner this way
 	if source is None:
 		# produce edges for all components
 		nodes=G
@@ -34,29 +38,25 @@ def dfs(G,source=None):
 				stack.pop()
 
 
-def direct_and_tag(G, source = None):
-	""" Makes tree edges go up, back edges go down. Computes dfi, 
-		parent for nodes and type (back, tree) for edges.
-		Returns a directed graph and the nodes in dfs order.
-		Throws an exception if the minimum degree is <3."""
-	G2 = nx.DiGraph()
-
+def compute_information(G, source = None):
+	""" Computes dfi, parent for nodes and type (back, tree) for edges.
+		Returns the nodes in dfs order.
+		Throws an exception if the minimum degree is <3 or the graph is disconnected"""
 	positions = []
-	depth_first_index = dict()
-	parent = dict()
 	degrees = dict()
 	num_seen = 0
 	for (u,v,d) in dfs(G, source):
 		if d=='tree':
-			G2.add_edge(v,u, {'type':d}) #tree edges go up
-			parent[v] = u
-		elif not G2.has_edge(u,v): #we also see the edge to the parent here
-			G2.add_edge(v,u, {'type':d}) #back edges go down
+			G[v][u]['type'] = d
+			G.node[v]['parent'] = u
+		elif not 'type' in G[v][u]: #we also see the edge to the parent here
+			G[v][u]['type'] = d
 				
 		for x in (u,v): #compute the dfs order
-			if not x in depth_first_index:
+			if not 'dfi' in G.node[x]:
 				degrees[x] = 0
-				depth_first_index[x] = num_seen
+				G.node[x]['dfi'] = num_seen
+				G.node[x]['real'] = False
 				num_seen +=1
 				positions.append(x)
 			degrees[x] += 1
@@ -68,11 +68,7 @@ def direct_and_tag(G, source = None):
 	for (x,d) in degrees.iteritems():
 		if d//2<3: raise ConnEx('min degree', G.edges(x))
 
-	nx.set_node_attributes(G2,'dfi', depth_first_index)
-	nx.set_node_attributes(G2,'parent', parent)
-	nx.set_node_attributes(G2,'real', dict.fromkeys(G2.nodes_iter(), False))
-
-	return G2, positions
+	return positions
 
 def chain_decomposition(G, checker):
 	""" Decomposes G into chains. The first three chains form a K23.
@@ -80,7 +76,7 @@ def chain_decomposition(G, checker):
 		Returns a list of chains."""
 
 	source = (G.nodes_iter()).next()
-	G, nodes_in_dfs_order = direct_and_tag(G, source)
+	nodes_in_dfs_order = compute_information(G, source)
 
 	chains = find_k23(G, source, checker)
 
@@ -91,10 +87,7 @@ def chain_decomposition(G, checker):
 		#sorting is unnecessary for correctness, but makes things slightly faster
 		#since shorter chains are easier to be added (less intervals...)
 		#for u in sorted(G.successors(x), key=lambda v:G.node[v]['dfi'], reverse=True):
-		for u in G.successors(x):
-			if G[x][u]['type'] == 'tree': #also see the edge to the parent
-				continue
-
+		for u in successors(G,x):
 			chain = [x]
 			#up in the graph until the next edge is in a chain or we're at the root
 			while u!=None and not 'chain' in G[chain[-1]][u]:
@@ -140,8 +133,7 @@ def chain_decomposition(G, checker):
 def find_k23(G, source, checker):
 	"""Finds the initial K23 subdivision (and the first three chains)"""
 
-	succ = G.successors(source) 
-	#succ = sorted(G.successors(source), key = lambda x: G.node[x]['dfi'], reverse=True)
+	succ = list(successors(G,source))
 	cycle = set()
 	cycle.add(source)
 	cycle_list = []

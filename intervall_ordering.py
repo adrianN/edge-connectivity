@@ -80,8 +80,11 @@ def order_segments(G, segments):
 			of the segments """
 		edge1 = (highest, G.node[highest]['parent'])
 		c = inner_node_of(G,lowest)
-		l = [v for v in G.predecessors(lowest) if G[v][lowest]['chain'] == c]
-		assert len(l) == 1
+		dfi = G.node[lowest]['dfi']
+		#predecessors of v on c
+		l = [v for v,data in G[lowest].iteritems() 
+			if G[lowest][v]['chain'] == c and (G[lowest][v]['type']=='back' or G.node[v]['dfi'] > dfi)]
+		assert len(l) == 1, str([G.node[v]['dfi'] for v in l])+ " "
 		edge2 = (lowest, l[0])
 		return edge1, edge2
 

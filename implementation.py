@@ -83,9 +83,7 @@ def add_chains(G, chains, checker):
 
 		#every type one child gets its own segment. These are all segments that will
 		#be created, we only add chains to them
-		segments = []
-		for c in chain.children[0]: 
-			segments.append(Segment(c))
+		segments = map(Segment, chain.children[0])
 
 		#for each type3 chain we walk upwards in the chain tree until we 
 		#reach a chain that is already in a segment or is already added
@@ -155,13 +153,14 @@ def read_yes_no():
 	return y,n
 
 y,n = read_yes_no()
+n = []
 print 'down to business'
 cProfile.run('main(y, n)')
 
 # statprof.start()
 
 # try:
-#main(y,n)
+# 	main(y,n)
 # finally:
 # 	statprof.stop()
 # 	statprof.display()
@@ -169,4 +168,4 @@ cProfile.run('main(y, n)')
 
 # #prepare_yes_no(5000,50)
 
-#main(yes(200,10),no(200,10))
+# main(yes(200,10),no(200,10))
