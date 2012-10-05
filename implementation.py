@@ -8,7 +8,7 @@ from intervall_ordering import order_segments
 from checker import Checker
 import cProfile
 import cPickle
-import statprof
+
 
 def toStr(G):
 	attr = nx.get_edge_attributes(G,'type')
@@ -40,7 +40,7 @@ def make_segment(chain):
 		except AttributeError:
 			chains.append(chain)
 			chain = chain.parent
-	assert all(c.type in [2,3] for c in chains)
+
 	if not segment: return None
 	
 	segment.attachment_points.append(source.start)
@@ -53,7 +53,6 @@ def add_chains(G, chains, checker):
 		""" Computes an order and adds segments in that order """
 		if segments == []: return
 		order = order_segments(G, segments)
-		assert len(order) == len(segments)
 		for segment in order:
 			for chain in segment.starters:
 				assert not chain.is_added, "chain "+str(chain)+" is already added"
@@ -121,15 +120,37 @@ def main(yes,no):
 		assert check_connectivity(G)
 
 def no(nodes, graphs):
-	for i in xrange(graphs):
+	for i in xrange(graphs//3):
+		print i
 		G = rg.not_3_conn(nodes)
 		G = rg.make_simple(G)
 		yield G
+	for i in xrange(graphs//3):
+		print i+graphs//3
+		G = rg.not_3_conn(nodes, 'dense')
+		G = rg.make_simple(G)
+		yield G
+	for i in xrange(graphs//3):
+		print i+2*graphs//3
+		G = rg.not_3_conn(nodes, 'sparse')
+		G = rg.make_simple(G)
+		yield G
+	print
 
 def yes(nodes, graphs):
-	for i in xrange(graphs):
+	for i in xrange(graphs//3):
+		print i
 		G = rg.make_simple(rg.random_3_edge_connected(nodes))
 		yield G
+	for i in xrange(graphs//3):
+		print i+graphs//3
+		G = rg.make_simple(rg.dense_3_edge_connected(nodes))
+		yield G
+	for i in xrange(graphs//3):
+		print i+2*graphs//3
+		G = rg.make_simple(rg.sparse_3_edge_connected(nodes))
+		yield G
+	print
 
 def prepare_yes_no(nodes, graphs):
 	print 'yes'
@@ -154,18 +175,10 @@ def read_yes_no():
 
 y,n = read_yes_no()
 n = []
-print 'down to business'
-cProfile.run('main(y, n)')
+# print 'down to business'
+#cProfile.run('main(y, n)')
+main(y,n)
 
-# statprof.start()
+#prepare_yes_no(5000,60)
 
-# try:
-# 	main(y,n)
-# finally:
-# 	statprof.stop()
-# 	statprof.display()
-
-
-# #prepare_yes_no(5000,50)
-
-# main(yes(200,10),no(200,10))
+#main(yes(200,12),no(200,12))

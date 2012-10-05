@@ -66,7 +66,7 @@ def compute_information(G, source = None):
 		raise ConnEx('disconnected')
 
 	for (x,d) in degrees.iteritems():
-		if d//2<3: raise ConnEx('min degree', G.edges(x))
+		if d<6: raise ConnEx('min degree', G.edges(x))
 
 	return positions
 
@@ -103,23 +103,6 @@ def chain_decomposition(G, checker):
 				continue
 
 			parent = G[last_node][u]['chain'] if u is not None else 0
-
-			# chain = [x]
-			# #up in the graph until the next edge is in a chain or we're at the root
-			# while u!=None and not 'chain' in G[chain[-1]][u]:
-			# 	G[chain[-1]][u]['chain'] = chain_number
-			# 	chain.append(u)
-			# 	u = G.node[u]['parent']
-			
-			# if len(chain)==1:
-			# 	assert x == source
-			# 	#we get here when we encounter the chains of the k23
-			# 	continue
-
-			# start = chain[0]
-			# first_node = chain[1]
-			# last_node = chain[-1]
-			# parent = G[chain[-1]][u]['chain'] if u!=None else 0
 
 			#classify the chain
 			p = chains[parent]
