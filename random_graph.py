@@ -11,9 +11,7 @@ def split_edge(G,e):
 	G.add_path([e[0], n, e[1]])
 	return n
 
-def random_3_edge_connected(n):
-	""" Returns a random 3-edge connected MultiGraph with roughly n nodes"""
-
+def random_3_edge_connected_weighted(n, edges, subdivide_one, subdivide_two):
 	def add_edge(G):
 		u = random.choice(G.nodes())
 		v = random.choice(G.nodes())
@@ -37,11 +35,23 @@ def random_3_edge_connected(n):
 	G.add_path([0,1])
 	G.add_path([0,1])
 
-	functions = add_edge, subdivide_edge, subdivide_two_edges
+	functions = [add_edge]*edges + [subdivide_edge]*subdivide_one +  [subdivide_two_edges]*subdivide_two
+	assert len(functions)>=3
 	while len(G)<n-1:
 		random.choice(functions)(G)
 
 	return G
+
+def random_3_edge_connected(n):
+	""" Returns a random 3-edge connected MultiGraph with roughly n nodes"""
+	return random_3_edge_connected_weighted(n,1,1,1)
+
+def sparse_3_edge_connected(n):
+	return random_3_edge_connected_weighted(n,1,10,10)
+
+def dense_3_edge_connected(n):
+	return random_3_edge_connected_weighted(n,5,1,1)
+
 
 def glue_graphs(G,G2,k):
 	"""Connect two graphs by k edges, return a new graph"""
@@ -65,15 +75,24 @@ def glue_graphs(G,G2,k):
 #		print (d[0][v[i]], d[1][v2[i]]),
 	return newG
 
-def not_3_conn(n):
+def not_3_conn(n, density='normal'):
 	"""Returns a graph with roughly n nodes containing two subgraphs that can be separated by up to two edges"""
-	G = random_3_edge_connected(max(4,n/2))
-	G2 = random_3_edge_connected(max(4,n-len(G)))
-	k = random.choice([1,2])
+	if density=='normal':
+		G = random_3_edge_connected(max(4,n/2))
+		G2 = random_3_edge_connected(max(4,n-len(G)))
+	elif density=='sparse':
+		G = sparse_3_edge_connected(max(4,n/2))
+		G2 = sparse_3_edge_connected(max(4,n-len(G)))
+	else:
+		G = dense_3_edge_connected(max(4,n/2))
+		G2 = dense_3_edge_connected(max(4,n-len(G)))
+	k = random.choice([1,2,2,2,2])
 	#print 'this graph is',k,'connected'
 	nG = glue_graphs(G,G2,k)
 	assert nx.is_connected(nG)
 	return nG
+
+
 
 def make_simple(G):
 	""" Makes a MultiGraph simple while preserving edge connectivity """
