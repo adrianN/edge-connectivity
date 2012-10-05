@@ -88,22 +88,38 @@ def chain_decomposition(G, checker):
 		#since shorter chains are easier to be added (less intervals...)
 		#for u in sorted(G.successors(x), key=lambda v:G.node[v]['dfi'], reverse=True):
 		for u in successors(G,x):
-			chain = [x]
-			#up in the graph until the next edge is in a chain or we're at the root
-			while u!=None and not 'chain' in G[chain[-1]][u]:
-				G[chain[-1]][u]['chain'] = chain_number
-				chain.append(u)
+			start = x
+			first_node = u
+			last_node = x
+
+			while not (u is None or 'chain' in G[last_node][u]):
+				G[last_node][u]['chain'] = chain_number
+				last_node = u
 				u = G.node[u]['parent']
-			
-			if len(chain)==1:
+
+			if start == last_node:
 				assert x == source
 				#we get here when we encounter the chains of the k23
 				continue
 
-			start = chain[0]
-			first_node = chain[1]
-			last_node = chain[-1]
-			parent = G[chain[-1]][u]['chain'] if u!=None else 0
+			parent = G[last_node][u]['chain'] if u is not None else 0
+
+			# chain = [x]
+			# #up in the graph until the next edge is in a chain or we're at the root
+			# while u!=None and not 'chain' in G[chain[-1]][u]:
+			# 	G[chain[-1]][u]['chain'] = chain_number
+			# 	chain.append(u)
+			# 	u = G.node[u]['parent']
+			
+			# if len(chain)==1:
+			# 	assert x == source
+			# 	#we get here when we encounter the chains of the k23
+			# 	continue
+
+			# start = chain[0]
+			# first_node = chain[1]
+			# last_node = chain[-1]
+			# parent = G[chain[-1]][u]['chain'] if u!=None else 0
 
 			#classify the chain
 			p = chains[parent]
