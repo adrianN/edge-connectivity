@@ -100,17 +100,16 @@ def order_segments(G, segments):
 	highest, lowest = extrema(segments)
 
 	path = list(tree_path_nodes(G,lowest,highest))
-	real_nodes = [x for x in path if G.node[x]['real']]	
-
-	if not real_nodes:
-		raise ConnEx('can\'t add all intervals, because there are no real nodes', 
-			cut_edges(highest,lowest))
-
+	real_nodes = (x for x in path if G.node[x]['real'])
 	positions = dict((x,i) for (i,x) in enumerate(path))
 
 	#generate intervals for real nodes and segments
-	assert -1 not in path
+	#assert -1 not in path
 	intervals = [Interval(-1,positions[x],'real_node') for x in real_nodes]
+
+	if not intervals:
+		raise ConnEx('can\'t add all intervals, because there are no real nodes', 
+			cut_edges(highest,lowest))
 
 	for s in segments:
 		a = sorted([positions[x] for x in s.attachment_points])
@@ -126,8 +125,9 @@ def order_segments(G, segments):
 		raise ConnEx("can't add all intervals",
 			cut_edges(*extrema(l.args[0])))
 
-	assert ordered_int[0] == 'real_node'
-	return ordered_int[1:]
+	ordered_int = iter(ordered_int)
+	assert ordered_int.next() == 'real_node'
+	return ordered_int
 
 def make_interval(segment):
 	pass
