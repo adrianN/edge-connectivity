@@ -19,8 +19,7 @@ def order_intervals(intervals, start):
 		of the intervals as nodes, hence intervals belonging to the same segment
 		correspond to one node in the graph.
 		returns a traversal starting from start. """
-	G = nx.Graph()
-	G.add_nodes_from((i.data for i in intervals))
+	G = dict(((i.data, []) for i in intervals)) 
 
 	#right to left sweep according to left endpoints
 	#linear time with proper sorting
@@ -35,10 +34,12 @@ def order_intervals(intervals, start):
 			#we need to add this special edge
 			if not special_connect and i2.endpoints[0] == l:
 				special_connect = True
-				G.add_edge(i.data,i2.data) 
+				G[i.data].append(i2.data)
+				G[i2.data].append(i.data)
 
 		if stack and r>= stack[-1].endpoints[0]:
-			G.add_edge(i.data, stack[-1].data) 
+			G[i.data].append(stack[-1].data)
+			G[stack[-1].data].append(i.data)
 
 		stack.append(i)
 
@@ -52,11 +53,12 @@ def order_intervals(intervals, start):
 			i2 = stack.pop()
 			if not special_connect and i2.endpoints[1] == r:
 				special_connect = True
-				G.add_edge(i.data, i2.data) 
+				G[i.data].append(i2.data)
+				G[i2.data].append(i.data)
 
 		if stack and l<= stack[-1].endpoints[1]:
-			G.add_edge(i.data, stack[-1].data)
-
+			G[i.data].append(stack[-1].data)
+			G[stack[-1].data].append(i.data)
 		stack.append(i)
 
 	order = list(nx.dfs_preorder_nodes(G,start))

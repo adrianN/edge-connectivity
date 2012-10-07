@@ -105,7 +105,7 @@ def check_connectivity(G):
 	except ConnEx as e:
 	 	print type(e), e.args
 	 	return False
-	# checker.verify()
+	checker.verify()
 
 	return True
 
@@ -174,11 +174,11 @@ def read_yes_no():
 	return y,n
 
 y,n = read_yes_no()
-n = []
+#n = []
 # print 'down to business'
 cProfile.run('main(y, n)')
 #main(y,n)
 
 #prepare_yes_no(5000,60)
 
-#main(yes(200,12),no(200,12))
+# main(yes(200,12),no(200,12))
