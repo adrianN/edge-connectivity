@@ -76,7 +76,7 @@ class Checker:
 					rebuild.add_edge(a,b)
 
 
-		if len(rebuild)!=2 or len(rebuild.edges())!=3:
+		if len(rebuild)!=2 or rebuild.number_of_edges()!=3:
 			print len(G), len(G.edges())
 			raise CertEx("graph not a k23 at the end")
 		return True
