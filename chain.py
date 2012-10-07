@@ -14,7 +14,7 @@ class Chain:
 		self.graph = G
 		self.is_added = False
 		self.checker = checker
-		if parent != None and type < 3: 
+		if parent is not None and type < 3: 
 			self.parent.children[type-1].append(self)
 		if type == 3:
 			c = inner_node_of(self.graph, start)
