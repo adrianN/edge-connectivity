@@ -12,24 +12,25 @@ class Checker:
 	def verify(self):
 		""" checks that the certificate is valid """
 		rebuild = nx.MultiGraph()
+		degrees = dict()
+
 		for i,path in enumerate(self.paths):
 			self.paths[i] = list(path)
-			rebuild.add_path(self.paths[i])
-
-		degrees = dict()
-		for u,v in rebuild.edges_iter():
-			if not self.orig.has_edge(u,v):
-				raise CertEx("graphs not isomorphic")		
-			try:
-				degrees[u] += 1
-			except KeyError: degrees[u] = 1
-			try:
-				degrees[v] += 1
-			except KeyError: degrees[v] = 1
+			for j in xrange(len(self.paths[i])-1):
+				u,v = self.paths[i][j], self.paths[i][j+1]
+				rebuild.add_edge(u,v)
+				if not self.orig.has_edge(u,v):
+					raise CertEx("graphs not isomorphic")		
+				try:
+					degrees[u] += 1
+				except KeyError: degrees[u] = 1
+				try:
+					degrees[v] += 1
+				except KeyError: degrees[v] = 1
 
 		if not all(degrees[x] >=3 for x in rebuild.nodes_iter()):
 			raise CertEx("minimum degree")
-		if not len(self.orig.edges()) == len(rebuild.edges()): 
+		if not self.orig.number_of_edges() == rebuild.number_of_edges(): 
 			raise CertEx("graphs are not isomorphic")
 
 		# remove paths in reverse order. the last path is always an edge in self.rebuild

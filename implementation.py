@@ -1,23 +1,8 @@
 import networkx as nx
-import random_graph as rg
 from chain_decomposition import *
-from tests import *
 from conn_exceptions import *
-import traceback as tb
 from intervall_ordering import order_segments
 from checker import Checker
-import cProfile
-import cPickle
-
-
-def toStr(G):
-	attr = nx.get_edge_attributes(G,'type')
-	l = []
-	for (u,v) in G.edges_iter():
-		l.append(str(u)+'-'+str(v)+' '+str(attr[(u,v)]))
-	return '\n'.join(l)
-
-nx.Graph.__str__ = toStr
 
 class Segment:
 	def __init__(self, chain):
@@ -64,7 +49,6 @@ def add_chains(G, chains, checker):
 	def add_type3(chain):
 		"""Adds a type3 chain and all its ancestors (ancestors first)"""
 		assert not chain.is_added
-		assert chain.type == 3
 		l = []
 		c = chain
 		while not c.is_added:
@@ -108,77 +92,3 @@ def check_connectivity(G):
 	checker.verify()
 
 	return True
-
-def main(yes,no):
-	print 'no'
-	for i,G in enumerate(no):
-		print i
-		assert not check_connectivity(G)
-	print 'yes'
-	for i,G in enumerate(yes):
-		print i
-		assert check_connectivity(G)
-
-def no(nodes, graphs):
-	for i in xrange(graphs//3):
-		print i
-		G = rg.not_3_conn(nodes)
-		G = rg.make_simple(G)
-		yield G
-	for i in xrange(graphs//3):
-		print i+graphs//3
-		G = rg.not_3_conn(nodes, 'dense')
-		G = rg.make_simple(G)
-		yield G
-	for i in xrange(graphs//3):
-		print i+2*graphs//3
-		G = rg.not_3_conn(nodes, 'sparse')
-		G = rg.make_simple(G)
-		yield G
-	print
-
-def yes(nodes, graphs):
-	for i in xrange(graphs//3):
-		print i
-		G = rg.make_simple(rg.random_3_edge_connected(nodes))
-		yield G
-	for i in xrange(graphs//3):
-		print i+graphs//3
-		G = rg.make_simple(rg.dense_3_edge_connected(nodes))
-		yield G
-	for i in xrange(graphs//3):
-		print i+2*graphs//3
-		G = rg.make_simple(rg.sparse_3_edge_connected(nodes))
-		yield G
-	print
-
-def prepare_yes_no(nodes, graphs):
-	print 'yes'
-	y = list(yes(nodes,graphs))
-	f = open('/Users/aneumann/Desktop/yes.g','w')
-	cPickle.dump(y,f)
-	f.close()
-	print 'no'
-	n = list(no(nodes,graphs))
-	f = open('/Users/aneumann/Desktop/no.g','w')
-	cPickle.dump(n,f)
-	f.close()
-
-def read_yes_no():
-	f = open('/Users/aneumann/Desktop/yes.g','r')
-	y = cPickle.load(f)
-	f.close()
-	f = open('/Users/aneumann/Desktop/no.g','r')
-	n = cPickle.load(f)
-	f.close()
-	return y,n
-
-y,n = read_yes_no()
-#n = []
-# print 'down to business'
-#cProfile.run('main(y, n)')
-main(y,n)
-
-#prepare_yes_no(5000,60)
-
-# main(yes(200,12),no(200,12))

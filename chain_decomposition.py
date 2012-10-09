@@ -1,5 +1,4 @@
 import networkx as nx
-from tests import *
 from chain import *
 from conn_exceptions import ConnEx
 
@@ -45,6 +44,7 @@ def compute_information(G, source = None):
 	positions = []
 	degrees = dict()
 	num_seen = 0
+	G.node[source]['parent'] = None
 	for (u,v,d) in dfs(G, source):
 		if d=='tree':
 			G[v][u]['type'] = d
@@ -90,6 +90,11 @@ def chain_decomposition(G, checker):
 		for u in successors(G,x):
 			start = x
 			first_node = u
+			if 'chain' in G[start][first_node]:
+				assert start==source
+				#we get here when we encounter the chains of the k23
+				continue
+
 			last_node = x
 
 			while not (u is None or 'chain' in G[last_node][u]):
@@ -97,13 +102,7 @@ def chain_decomposition(G, checker):
 				last_node = u
 				u = G.node[u]['parent']
 
-			if start == last_node:
-				assert x == source
-				#we get here when we encounter the chains of the k23
-				continue
-
 			parent = G[last_node][u]['chain'] if u is not None else 0
-
 			#classify the chain
 			p = chains[parent]
 			if start == p.start or p.num()==0 and start==p.end: 

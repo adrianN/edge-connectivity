@@ -24,13 +24,17 @@ def tree_path_nodes(G,u,v):
 	yield v
 
 def to_dot(G):
-	s = ["digraph G {",'rankdir = BT']
+	s = ["digraph G {"]
 	def n(u):
-		return '"' + str(u) + ',' + str(inner_node_of(G,u)) + ',' + str(G.node[u]['dfi']) + '"'
+		return '"' + str(G.node[u]['dfi']) + '"'
 	for u,v in G.edges():
+		if G.node[u]['dfi'] > G.node[v]['dfi']:
+			u,v = v,u
 		edge = '\t' + n(u) + "->" + n(v) + " [ "
-		edge = edge + "label = \"" + str(G[u][v]['chain']) + '"'
+		chain = G[u][v]['chain'] if 'chain' in G[u][v] else -1
+		edge = edge + "label = \"" + str(chain) + '"'
 		edge = edge + ", constraint = " + str(G[u][v]['type']=='tree') 
+		edge = edge + ", color = " + ("red" if G[u][v]['type']=='back' else 'black')
 		edge = edge + ', weight = ' + ('100' if G[u][v]['type'] == 'tree' else '1') + "]"
 		s.append(edge)
 	s.append('}')

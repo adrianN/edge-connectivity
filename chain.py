@@ -8,7 +8,6 @@ class Chain:
 		self.first_node = first_node
 		self.end = end
 		self.parent = chains[parent] if chains else None
-		self.type = type
 		self.type3 = []
 		self.children = [[],[]]
 		self.graph = G
@@ -20,8 +19,7 @@ class Chain:
 			c = inner_node_of(self.graph, start)
 			if c==len(chains):
 				raise ConnEx('cut edge',(start,G.node[start]['parent']))
-			chain = chains[c]
-			chain.type3.append(self)
+			chains[c].type3.append(self)
 
 	def num(self):
 		return self.graph[self.start][self.first_node]['chain']
