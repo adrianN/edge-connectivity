@@ -4,6 +4,7 @@ import cPickle
 import random_graph as rg
 from implementation import check_connectivity
 from helper import to_dot
+import sys
 
 
 def check_basic_information(G):
@@ -116,12 +117,13 @@ def read_yes_no():
 	f.close()
 	return y,n
 
-y,n = read_yes_no()
-#n = []
-# print 'down to business'
-#cProfile.run('main(y, n)')
-main(y,n)
+if 'profile' in sys.argv:
+	y,n = read_yes_no()
+	cProfile.run('main(y, n)')
+elif 'time' in sys.argv:
+	y,n = read_yes_no()
+	main(y,n)
+else:
+	main(yes(10,20000),no(10,20000))
 
 #prepare_yes_no(5000,60)
-
-# main(yes(10,20000),no(10,20000))
