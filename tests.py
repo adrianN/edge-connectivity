@@ -116,12 +116,12 @@ def read_yes_no():
 	f.close()
 	return y,n
 
-#y,n = read_yes_no()
+y,n = read_yes_no()
 #n = []
 # print 'down to business'
-#cProfile.run('main(y, n)', 'fooprof')
-#main(y,n)
+#cProfile.run('main(y, n)')
+main(y,n)
 
 #prepare_yes_no(5000,60)
 
-main(yes(10,20000),no(10,20000))
+# main(yes(10,20000),no(10,20000))
