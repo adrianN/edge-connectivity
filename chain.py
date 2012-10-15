@@ -21,9 +21,6 @@ class Chain:
 				raise ConnEx('cut edge',(start,G.node[start]['parent']))
 			chains[c].type3.append(self)
 
-	def num(self):
-		return self.graph[self.start][self.first_node]['chain']
-
 	def add(self):
 		self.is_added = True
 		self.graph.node[self.start]['real'] = True

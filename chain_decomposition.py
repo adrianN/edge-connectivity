@@ -81,9 +81,7 @@ def chain_decomposition(G, checker):
 	chains = find_k23(G, source, checker)
 
 	chain_number = 3
-	num = 0
 	for x in nodes_in_dfs_order:
-		num += 1
 		#sorting is unnecessary for correctness, but makes things slightly faster
 		#since shorter chains are easier to be added (less intervals...)
 		#for u in sorted(G.successors(x), key=lambda v:G.node[v]['dfi'], reverse=True):
@@ -105,9 +103,9 @@ def chain_decomposition(G, checker):
 			parent = G[last_node][u]['chain'] if u is not None else 0
 			#classify the chain
 			p = chains[parent]
-			if start == p.start or p.num()==0 and start==p.end: 
+			if start == p.start or parent==0 and start==p.end: 
 				type = 2
-			elif inner_node_of(G,start) == p.num():
+			elif inner_node_of(G,start) == parent:
 				type = 1
 			else:
 				type = 3
