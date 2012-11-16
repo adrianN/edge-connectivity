@@ -24,18 +24,11 @@ def order_intervals(intervals, start):
 	#right to left sweep according to left endpoints
 	#linear time with proper sorting
 	stack = []
-	for i in sorted(intervals, reverse = True, key = lambda i: (i.endpoints[0], -i.endpoints[1])):
-		special_connect = False
+	for i in sorted(intervals, reverse = True, key = lambda i: i.endpoints):
 		l, r = i.endpoints
 
 		while stack and r>stack[-1].endpoints[1]:
 			i2 = stack.pop()
-			#Since now the intervals don't pierce each other anymore,
-			#we need to add this special edge
-			if not special_connect and i2.endpoints[0] == l:
-				special_connect = True
-				G[i.data].append(i2.data)
-				G[i2.data].append(i.data)
 
 		if stack and r>= stack[-1].endpoints[0]:
 			G[i.data].append(stack[-1].data)
@@ -45,16 +38,11 @@ def order_intervals(intervals, start):
 
 	#left to right sweep according to right endpoints
 	stack = []
-	for i in sorted(intervals, key = lambda i: (i.endpoints[1], -i.endpoints[0])):
+	for i in sorted(intervals, key = lambda i: (i.endpoints[1], i.endpoints[0])):
 		l, r = i.endpoints
-		special_connect = False
 
 		while stack and l<stack[-1].endpoints[0]:
 			i2 = stack.pop()
-			if not special_connect and i2.endpoints[1] == r:
-				special_connect = True
-				G[i.data].append(i2.data)
-				G[i2.data].append(i.data)
 
 		if stack and l<= stack[-1].endpoints[1]:
 			G[i.data].append(stack[-1].data)
