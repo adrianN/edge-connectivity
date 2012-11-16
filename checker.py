@@ -1,5 +1,6 @@
 import networkx as nx
 from conn_exceptions import CertEx
+from helper import simple_to_dot
 
 class Checker:
 	def __init__(self, G):
@@ -55,16 +56,13 @@ class Checker:
 				print u,v
 				raise CertEx("no edge ")
 			
-			if degrees[u] == degrees[v] == 2:
-				#if u and v subdivide the same edge they have one endpoint of the edge
-				#and either u or v as neighbor
-				#we don't check len(neighbors) since having only two neighbors is perfectly
-				#fine as long as there are multiple edges to them
-				raise CertEx('divides same edge twice')
-			
 			rebuild.remove_edge(u,v)
 			degrees[u] -= 1
 			degrees[v] -= 1
+
+			if degrees[u] == degrees[v] == 2 and rebuild.has_edge(u,v):
+				raise CertEx("divides same link twice")
+
 			for x in (u,v):
 				if degrees[x] == 2: 
 					#replaces a degree 2 node by an edge 
